@@ -65,9 +65,16 @@
         .admin-header { display: flex; justify-content: space-between; align-items: center; padding: 20px; }
         .admin-title { font-size: 24px; font-weight: 800; color: #fff; }
         .exit-btn { color: #fff; font-size: 14px; text-decoration: none; cursor: pointer; }
+        
+        /* TABS (Restored Style) */
         .admin-tabs { display: flex; background: #111; border-radius: 8px; margin: 0 20px 20px 20px; padding: 4px; border: 1px solid #222; }
         .admin-tab { flex: 1; text-align: center; padding: 10px; color: #888; font-size: 14px; font-weight: 600; cursor: pointer; border-radius: 6px; }
         .admin-tab.active { background: var(--brand-gold); color: #000; }
+        
+        .sub-tab-container { display: flex; background: #111; margin: 0 15px 15px 15px; border-radius: 8px; padding: 4px; border: 1px solid #333; }
+        .sub-tab-btn { flex: 1; padding: 10px; background: transparent; color: #777; border: none; cursor: pointer; border-radius: 6px; font-weight: 600; font-size: 13px; }
+        .sub-tab-btn.active { background: var(--brand-gold); color: #000; }
+
         .admin-card { background: var(--card-grey); margin: 0 20px 20px 20px; padding: 20px; border-radius: 12px; border: 1px solid #222; }
         .admin-input-group { margin-bottom: 15px; }
         input, textarea, select { width: 100%; background: var(--input-bg); border: 1px solid var(--input-border); color: #fff; padding: 15px; border-radius: 8px; font-size: 14px; outline: none; font-family: 'Inter', sans-serif; }
@@ -244,7 +251,7 @@
                 <div class="admin-input-group"><textarea id="u-news-content" placeholder="Content"></textarea></div>
             </div>
             <div class="file-input-wrapper"><span class="file-custom-btn">Image</span><span class="file-name" id="user-file-name">Choose...</span><input type="file" id="user-file" accept="image/*" onchange="window.updateFileName(this, 'user-file-name')"></div>
-            <button class="btn-save" id="btn-user-save" onclick="window.saveUserPost()" data-key="post_now">POST</button>
+            <button class="btn-save" id="btn-user-save" onclick="window.saveUserPost()" data-key="post_now">POST NOW</button>
             <button class="exit-btn" onclick="window.closeUserModal()" data-key="cancel" style="width:100%;color:#888;">CANCEL</button>
         </div>
     </div>
