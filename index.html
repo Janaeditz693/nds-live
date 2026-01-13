@@ -26,7 +26,7 @@
 
         /* CARDS */
         .feed-container { padding: 0 15px; min-height: 50vh; }
-        .card { background-color: var(--card-grey); border-radius: 12px; padding: 15px; margin-bottom: 20px; border: 1px solid #222; }
+        .card { background-color: var(--card-grey); border-radius: 12px; padding: 15px; margin-bottom: 20px; border: 1px solid #222; position: relative; }
         .card-header { display: flex; gap: 12px; margin-bottom: 12px; align-items: center; }
         .avatar { width: 45px; height: 45px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 18px; color: #000; }
         .avatar.nds { background: var(--brand-gold); } .avatar.user { background: #fff; }
@@ -66,7 +66,7 @@
         .admin-title { font-size: 24px; font-weight: 800; color: #fff; }
         .exit-btn { color: #fff; font-size: 14px; text-decoration: none; cursor: pointer; }
         
-        /* TABS (Restored Style) */
+        /* TABS (Fixed Style) */
         .admin-tabs { display: flex; background: #111; border-radius: 8px; margin: 0 20px 20px 20px; padding: 4px; border: 1px solid #222; }
         .admin-tab { flex: 1; text-align: center; padding: 10px; color: #888; font-size: 14px; font-weight: 600; cursor: pointer; border-radius: 6px; }
         .admin-tab.active { background: var(--brand-gold); color: #000; }
@@ -115,6 +115,9 @@
         /* Profile Layout */
         .profile-hero { text-align: center; padding: 30px 20px; background: var(--card-grey); margin-bottom: 20px; border-bottom: 1px solid #222; }
         .profile-big-avatar { width: 80px; height: 80px; background: var(--brand-gold); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 30px; font-weight: bold; color: #000; margin: 0 auto 15px auto; }
+        
+        /* DELETE BUTTON STYLING FOR ADMIN */
+        .delete-btn { position: absolute; top: 10px; right: 10px; background: rgba(255, 0, 0, 0.8); color: white; padding: 5px 10px; border-radius: 4px; font-size: 12px; border:none; cursor: pointer; z-index: 10; }
     </style>
 </head>
 <body>
@@ -163,6 +166,7 @@
             <div class="profile-name" id="profile-username">Username</div>
             <div class="profile-meta" data-key="member">Member</div>
             <button class="btn-logout" onclick="window.handleLogout()" data-key="logout">LOGOUT</button>
+            <button class="btn-logout" style="margin-top:10px; background:transparent; border:1px solid #444; color:#666; font-size:10px;" onclick="document.getElementById('password-modal').style.display='flex'">Admin Unlock</button>
         </div>
         <div class="existing-section">
             <div class="existing-title" data-key="my_posts">My Posts</div>
@@ -196,7 +200,7 @@
     </div>
 
     <div id="page-admin" class="page-section">
-        <div class="admin-header"><span class="admin-title">Admin</span><span class="exit-btn" onclick="window.exitAdmin()">Exit</span></div>
+        <div class="admin-header"><span class="admin-title">Admin Dashboard</span><span class="exit-btn" onclick="window.exitAdmin()">Exit</span></div>
         <div class="admin-tabs">
             <div class="admin-tab active" onclick="window.setAdminMode('live', this)">Live</div>
             <div class="admin-tab" onclick="window.setAdminMode('events', this)">Events</div>
@@ -205,6 +209,7 @@
         <div class="admin-card">
             <input type="hidden" id="admin-current-mode" value="live">
             <input type="hidden" id="edit-post-id" value="">
+            
             <div id="form-live" class="admin-form-container active">
                 <div class="file-input-wrapper"><span class="file-custom-btn">File</span><span class="file-name" id="live-file-name">None</span><input type="file" id="live-file" onchange="window.updateFileName(this, 'live-file-name')"></div>
                 <div class="admin-input-group"><input type="text" id="live-name" placeholder="Name"></div>
@@ -212,6 +217,7 @@
                 <div class="admin-input-group"><input type="text" id="live-time" placeholder="Time (e.g. 5.66)"></div>
                 <div class="admin-input-group"><input type="date" id="live-date"></div>
             </div>
+            
             <div id="form-events" class="admin-form-container">
                 <div class="file-input-wrapper"><span class="file-custom-btn">File</span><span class="file-name" id="event-file-name">None</span><input type="file" id="event-file" onchange="window.updateFileName(this, 'event-file-name')"></div>
                 <div class="admin-input-group"><input type="text" id="event-name" placeholder="Event Name"></div>
@@ -219,11 +225,13 @@
                 <div class="admin-input-group"><textarea id="event-desc" placeholder="Desc"></textarea></div>
                 <div class="admin-input-group"><input type="date" id="event-date"></div>
             </div>
+            
             <div id="form-news" class="admin-form-container">
                 <div class="file-input-wrapper"><span class="file-custom-btn">File</span><span class="file-name" id="news-file-name">None</span><input type="file" id="news-file" onchange="window.updateFileName(this, 'news-file-name')"></div>
                 <div class="admin-input-group"><textarea id="news-content" placeholder="Content"></textarea></div>
                 <div class="admin-input-group"><input type="date" id="news-date"></div>
             </div>
+            
             <button class="btn-save" id="btn-save-text" onclick="window.saveAdminPost()">SAVE POST</button>
             <button class="btn-cancel" id="btn-cancel" onclick="window.cancelEdit()">CANCEL</button>
         </div>
@@ -237,19 +245,23 @@
             <div class="modal-title" data-key="create_post">Create Post</div>
             <input type="hidden" id="user-edit-id" value="">
             <div class="admin-input-group"><select id="user-cat" onchange="window.updateUserForm()"><option value="live">Live Update</option><option value="events">Event</option><option value="news">News</option></select></div>
+            
             <div id="user-form-live" class="user-form-section active">
                 <div class="admin-input-group"><input type="text" id="u-live-name" placeholder="Name"></div>
                 <div class="admin-input-group"><input type="text" id="u-live-village" placeholder="Village"></div>
                 <div class="admin-input-group"><input type="text" id="u-live-time" placeholder="Time (e.g. 5.66)"></div>
             </div>
+            
             <div id="user-form-events" class="user-form-section">
                 <div class="admin-input-group"><input type="text" id="u-event-name" placeholder="Event Name"></div>
                 <div class="admin-input-group"><input type="text" id="u-event-loc" placeholder="Location"></div>
                 <div class="admin-input-group"><textarea id="u-event-desc" placeholder="Details"></textarea></div>
             </div>
+            
             <div id="user-form-news" class="user-form-section">
                 <div class="admin-input-group"><textarea id="u-news-content" placeholder="Content"></textarea></div>
             </div>
+            
             <div class="file-input-wrapper"><span class="file-custom-btn">Image</span><span class="file-name" id="user-file-name">Choose...</span><input type="file" id="user-file" accept="image/*" onchange="window.updateFileName(this, 'user-file-name')"></div>
             <button class="btn-save" id="btn-user-save" onclick="window.saveUserPost()" data-key="post_now">POST NOW</button>
             <button class="exit-btn" onclick="window.closeUserModal()" data-key="cancel" style="width:100%;color:#888;">CANCEL</button>
@@ -274,7 +286,6 @@
         import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, updateDoc, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
         import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, updateProfile } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-        // CONFIG
         const firebaseConfig = {
             apiKey: "AIzaSyDrYvK2sXIEV2sqppxN0knT-z0OZXdvdCM",
             authDomain: "nds-live-f20e0.firebaseapp.com",
@@ -290,28 +301,31 @@
         const CLOUDINARY_URL = 'https://api.cloudinary.com/v1_1/di0fynckd/auto/upload';
         const CLOUDINARY_PRESET = 'imcwyygq';
 
-        // STATE
         let posts = [];
         let currentUser = null;
         let currentLang = localStorage.getItem('nds_lang') || 'en';
+        let isAdminUnlocked = false;
+
         const translations = {
             en: { feed_title:"Today's Feed", nav_home:"HOME", nav_live:"LIVE", nav_events:"EVENTS", nav_news:"NEWS", nav_more:"MORE", tab_status:"Live Status", tab_video:"Live Video", tab_upcoming:"Upcoming", tab_previous:"Previous Live", news_title:"Latest News", member:"Member", logout:"LOGOUT", my_posts:"My Posts", login_title:"Welcome Back", login_btn:"LOGIN", create_acc:"Create New Account", reg_title:"Create Account", reg_btn:"REGISTER", have_acc:"Login instead?", create_post:"Create Post", post_now:"POST NOW", cancel:"CANCEL", read_more:"Read More", show_less:"Show Less" },
             ta: { feed_title:"இன்றைய செய்திகள்", nav_home:"முகப்பு", nav_live:"நேரலை", nav_events:"நிகழ்வு", nav_news:"செய்தி", nav_more:"மேலும்", tab_status:"நேரலை நிலவரம்", tab_video:"நேரலை காணொளி", tab_upcoming:"வரவிருக்கும்", tab_previous:"முந்தைய", news_title:"சமீபத்திய செய்திகள்", member:"உறுப்பினர்", logout:"வெளியேறு", my_posts:"என் பதிவுகள்", login_title:"நல்வரவு", login_btn:"உள்நுழைய", create_acc:"புதிய கணக்கை உருவாக்கு", reg_title:"கணக்கு துவங்கு", reg_btn:"பதிவு செய்", have_acc:"உள்நுழைய வேண்டுமா?", create_post:"பதிவிடவும்", post_now:"பதிவிடு", cancel:"ரத்து", read_more:"மேலும் படிக்க", show_less:"சுருக்க" }
         };
 
-        // AUTH
         onAuthStateChanged(auth, (user) => {
             currentUser = user;
             updateProfileIcon();
-            if(document.getElementById('page-profile').classList.contains('active')) renderProfilePosts();
+            if(user) {
+                if(document.getElementById('page-profile').classList.contains('active')) renderProfilePosts();
+            } else {
+                // If not logged in, force login screen
+                window.navTo('login', null);
+            }
         });
 
         // --- GLOBAL EXPORTS ---
         window.handleRegister = async () => {
-            const n = document.getElementById('reg-name').value;
-            const e = document.getElementById('reg-email').value;
-            const p = document.getElementById('reg-pass').value;
-            if(!n || !e || !p) return alert("Fill all fields");
+            const n=document.getElementById('reg-name').value; const e=document.getElementById('reg-email').value; const p=document.getElementById('reg-pass').value;
+            if(!n||!e||!p) return alert("Fill all fields");
             showLoading(true);
             try {
                 const cred = await createUserWithEmailAndPassword(auth, e, p);
@@ -321,8 +335,7 @@
         };
 
         window.handleLogin = async () => {
-            const e = document.getElementById('login-email').value;
-            const p = document.getElementById('login-pass').value;
+            const e=document.getElementById('login-email').value; const p=document.getElementById('login-pass').value;
             showLoading(true);
             try {
                 await signInWithEmailAndPassword(auth, e, p);
@@ -330,9 +343,8 @@
             } catch(err) { showLoading(false); alert("Invalid Credentials"); }
         };
 
-        window.handleLogout = async () => { await signOut(auth); window.navTo('home', document.querySelector('.nav-item')); };
+        window.handleLogout = async () => { await signOut(auth); window.navTo('login', null); };
 
-        // DATABASE
         const q = query(collection(db, "posts")); 
         onSnapshot(q, (snapshot) => {
             posts = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -349,80 +361,51 @@
             return data.secure_url;
         }
 
-        // ADMIN POSTING
-        window.saveAdminPost = async () => {
-            const mode = document.getElementById('admin-current-mode').value;
-            const editId = document.getElementById('edit-post-id').value;
-            const fileInput = document.getElementById(mode === 'live' ? 'live-file' : mode === 'events' ? 'event-file' : 'news-file');
+        // POSTING LOGIC
+        window.saveAdminPost = async () => { savePostGeneric(true); };
+        window.saveUserPost = async () => { savePostGeneric(false); };
+
+        async function savePostGeneric(isAdmin) {
+            const mode = isAdmin ? document.getElementById('admin-current-mode').value : document.getElementById('user-cat').value;
+            const editId = isAdmin ? document.getElementById('edit-post-id').value : document.getElementById('user-edit-id').value;
             
-            let post = { category: mode, isAdmin: true, author: 'Admin', likes:0, timestamp: Date.now() };
-            
-            if(mode === 'live') {
-                post.title = document.getElementById('live-name').value;
-                post.village = document.getElementById('live-village').value;
-                post.time = document.getElementById('live-time').value;
-                post.date = document.getElementById('live-date').value;
-            } else if(mode === 'events') {
-                post.title = document.getElementById('event-name').value;
-                post.village = document.getElementById('event-loc').value;
-                post.desc = document.getElementById('event-desc').value;
-                post.date = document.getElementById('event-date').value;
+            // Map IDs based on mode
+            let ids = {};
+            if(isAdmin) {
+                if(mode=='live'){ ids={n:'live-name',v:'live-village',t:'live-time',d:'live-date',f:'live-file'}; }
+                else if(mode=='events'){ ids={n:'event-name',v:'event-loc',desc:'event-desc',d:'event-date',f:'event-file'}; }
+                else { ids={desc:'news-content',d:'news-date',f:'news-file'}; }
             } else {
-                post.title = "News Update";
-                post.desc = document.getElementById('news-content').value;
-                post.date = document.getElementById('news-date').value;
+                if(mode=='live'){ ids={n:'u-live-name',v:'u-live-village',t:'u-live-time'}; }
+                else if(mode=='events'){ ids={n:'u-event-name',v:'u-event-loc',desc:'u-event-desc'}; }
+                else { ids={desc:'u-news-content'}; }
             }
 
-            if(!post.title && !post.desc) return alert("Info missing");
-            showLoading(true);
+            let post = { category: mode, isAdmin: isAdmin, author: isAdmin?'Admin':(currentUser.displayName||'User'), timestamp: Date.now() };
+            if(isAdmin && !post.likes) post.likes=0;
 
+            // Gather Data
+            if(ids.n) post.title = document.getElementById(ids.n).value;
+            if(ids.v) post.village = document.getElementById(ids.v).value;
+            if(ids.t) post.time = document.getElementById(ids.t).value;
+            if(ids.d) post.date = document.getElementById(ids.d).value;
+            if(ids.desc) {
+                if(mode === 'news' || (!ids.n)) post.title = "News Update";
+                post.desc = document.getElementById(ids.desc).value;
+            }
+
+            // Image Handle
+            const fileInput = document.getElementById(isAdmin ? ids.f : 'user-file');
+            
+            if(!post.title && !post.desc) return alert("Missing info");
+            
+            showLoading(true);
             try {
-                if(fileInput.files[0]) {
+                if(fileInput && fileInput.files[0]) {
                     post.mediaSrc = await uploadFile(fileInput.files[0]);
                     post.mediaType = fileInput.files[0].type.startsWith('video') ? 'video' : 'image';
-                }
-
-                if(editId) {
-                    await updateDoc(doc(db, "posts", editId), post);
-                    alert("Updated");
-                } else {
-                    if(!post.mediaSrc) post.mediaSrc = 'https://via.placeholder.com/400x200?text=No+Image'; // Default
-                    await addDoc(collection(db, "posts"), post);
-                    alert("Posted");
-                }
-                window.cancelEdit();
-            } catch(e) { console.error(e); alert("Error saving"); }
-            showLoading(false);
-        };
-
-        window.saveUserPost = async () => {
-            const cat = document.getElementById('user-cat').value;
-            const editId = document.getElementById('user-edit-id').value;
-            const fileInput = document.getElementById('user-file');
-            
-            let post = { category: cat, isAdmin: false, author: currentUser.displayName || 'User', timestamp: Date.now() };
-            if(cat === 'live') {
-                post.title = document.getElementById('u-live-name').value;
-                post.village = document.getElementById('u-live-village').value;
-                post.time = document.getElementById('u-live-time').value;
-            } else if(cat === 'events') {
-                post.title = document.getElementById('u-event-name').value;
-                post.village = document.getElementById('u-event-loc').value;
-                post.desc = document.getElementById('u-event-desc').value;
-            } else {
-                post.title = "User Update";
-                post.desc = document.getElementById('u-news-content').value;
-            }
-
-            if(!post.title && !post.desc) return alert("Info required");
-            showLoading(true);
-
-            try {
-                if(fileInput.files[0]) {
-                    post.mediaSrc = await uploadFile(fileInput.files[0]);
-                    post.mediaType = 'image';
                 } else if(!editId) {
-                    showLoading(false); return alert("Image required");
+                    showLoading(false); return alert("Image/Video Required");
                 }
 
                 if(editId) {
@@ -433,79 +416,66 @@
                     await addDoc(collection(db, "posts"), post);
                     alert("Posted");
                 }
-                window.closeUserModal();
-            } catch(e) { console.error(e); alert("Error"); }
+                
+                if(isAdmin) window.cancelEdit(); else window.closeUserModal();
+            } catch(e) { console.error(e); alert("Error: " + e.message); }
             showLoading(false);
-        };
+        }
 
         window.deletePost = async (id) => {
-            if(confirm("Delete?")) {
+            if(confirm("Delete this post?")) {
                 showLoading(true);
                 await deleteDoc(doc(db, "posts", id));
                 showLoading(false);
             }
         };
 
-        // INTERACTIONS
-        window.toggleLike = async (id) => {
-            const p = posts.find(x => x.id === id);
-            if(p) {
-                const newLikes = (p.likes || 0) + 1;
-                await updateDoc(doc(db, "posts", id), { likes: newLikes });
-            }
-        };
+        // UI HELPERS
+        window.navTo = (p, b) => { document.querySelectorAll('.page-section').forEach(e=>e.classList.remove('active')); document.getElementById('page-'+p).classList.add('active'); if(b){ document.querySelectorAll('.nav-item').forEach(e=>e.classList.remove('active')); b.classList.add('active'); } window.scrollTo(0,0); };
+        window.switchSubTab = (p, s) => { document.querySelectorAll(`#page-${p} .sub-tab-btn`).forEach(b=>b.classList.remove('active')); event.target.classList.add('active'); document.querySelectorAll(`#page-${p} .sub-content`).forEach(e=>e.classList.remove('active')); document.getElementById(`${p}-${s}-content`).classList.add('active'); };
+        window.updateFileName = (i,d) => { document.getElementById(d).innerText = i.files[0] ? i.files[0].name : "None"; };
+        window.setAdminMode = (m, b) => { document.getElementById('admin-current-mode').value=m; document.querySelectorAll('.admin-tab').forEach(t=>t.classList.remove('active')); b.classList.add('active'); document.querySelectorAll('.admin-form-container').forEach(f=>f.classList.remove('active')); document.getElementById('form-'+m).classList.add('active'); };
+        window.editAdminPost = (id) => { const p=posts.find(x=>x.id===id); window.navTo('admin',null); window.setAdminMode(p.category, document.querySelector(`.admin-tab:nth-child(${p.category=='live'?1:p.category=='events'?2:3})`)); document.getElementById('edit-post-id').value=id; if(p.category=='live'){document.getElementById('live-name').value=p.title;document.getElementById('live-village').value=p.village;document.getElementById('live-time').value=p.time;} else if(p.category=='events'){document.getElementById('event-name').value=p.title;document.getElementById('event-loc').value=p.village;document.getElementById('event-desc').value=p.desc;} else{document.getElementById('news-content').value=p.desc;} document.getElementById('btn-save-text').innerText="UPDATE"; document.getElementById('btn-cancel').style.display='block'; };
+        window.cancelEdit = () => { document.getElementById('edit-post-id').value=""; document.getElementById('btn-save-text').innerText="SAVE POST"; document.getElementById('btn-cancel').style.display='none'; document.querySelectorAll('.admin-card input,.admin-card textarea').forEach(i=>i.value=''); };
+        window.handleFabClick = () => { if(!currentUser) {if(confirm("Login?")) window.navTo('login',null);} else document.getElementById('user-modal').style.display='flex'; };
+        window.closeUserModal = () => document.getElementById('user-modal').style.display='none';
+        window.updateUserForm = () => { const c=document.getElementById('user-cat').value; document.querySelectorAll('.user-form-section').forEach(e=>e.classList.remove('active')); document.getElementById('user-form-'+c).classList.add('active'); };
+        window.checkPassword = () => { if(document.getElementById('admin-password').value==='admin123'){document.getElementById('password-modal').style.display='none'; isAdminUnlocked=true; window.navTo('admin',null);}else alert("Incorrect"); };
+        window.closePasswordModal = () => document.getElementById('password-modal').style.display='none';
+        window.exitAdmin = () => { window.cancelEdit(); window.navTo('home', document.querySelector('.nav-item')); };
+        window.openLightbox = (s,t) => { const c=document.getElementById('lightbox-content'); if(t=='video') c.innerHTML=`<video src="${s}" controls autoplay style="max-width:100%;max-height:90vh;"></video>`; else c.innerHTML=`<img src="${s}" style="max-width:100%;max-height:90vh;">`; document.getElementById('lightbox-modal').style.display='flex'; };
+        window.closeLightbox = () => { document.getElementById('lightbox-modal').style.display='none'; document.getElementById('lightbox-content').innerHTML=''; };
+        window.toggleReadMore = (id) => { const s=document.getElementById(`desc-short-${id}`); const f=document.getElementById(`desc-full-${id}`); const b=document.getElementById(`btn-read-${id}`); if(s.style.display=='none'){s.style.display='inline';f.style.display='none';b.innerText=getTrans('read_more');}else{s.style.display='none';f.style.display='inline';b.innerText=getTrans('show_less');} };
+        window.handleProfileClick = () => { if(currentUser) { window.navTo('profile', null); document.getElementById('profile-username').innerText = currentUser.displayName || 'User'; document.getElementById('profile-avatar').innerText = (currentUser.displayName||'U').charAt(0).toUpperCase(); renderProfilePosts(); } else window.navTo('login', null); };
+        window.toggleLike = async (id) => { const p=posts.find(x=>x.id===id); if(p){ await updateDoc(doc(db,"posts",id),{likes:(p.likes||0)+1}); } };
+        window.sharePost = (id) => { const p=posts.find(x=>x.id===id); if(navigator.share) navigator.share({title:'NDS LIVE',text:p.title,url:window.location.href}); else alert("Link copied!"); };
+        window.toggleComments = (id) => document.getElementById(`comments-${id}`).classList.toggle('open');
+        window.addComment = async (id) => { const i=document.getElementById(`comment-input-${id}`); if(!i.value)return; const p=posts.find(x=>x.id===id); const c=p.comments||[]; c.push({user:currentUser.displayName||'Guest',text:i.value}); await updateDoc(doc(db,"posts",id),{comments:c}); i.value=''; };
+        window.toggleLanguage = () => { currentLang=currentLang==='en'?'ta':'en'; localStorage.setItem('nds_lang',currentLang); applyLanguage(); };
 
-        window.sharePost = (id) => {
-            const p = posts.find(x => x.id === id);
-            if(navigator.share) navigator.share({ title: 'NDS LIVE', text: p.title, url: window.location.href });
-            else alert("Link copied!");
-        };
-
-        window.toggleComments = (id) => { document.getElementById(`comments-${id}`).classList.toggle('open'); }
-        
-        window.addComment = async (id) => {
-            const input = document.getElementById(`comment-input-${id}`);
-            const text = input.value;
-            if(!text) return;
-            const p = posts.find(x => x.id === id);
-            const newComments = p.comments || [];
-            newComments.push({ user: currentUser ? currentUser.displayName : 'Guest', text: text });
-            await updateDoc(doc(db, "posts", id), { comments: newComments });
-            input.value = '';
-        };
-
-        window.toggleLanguage = () => {
-            currentLang = currentLang === 'en' ? 'ta' : 'en';
-            localStorage.setItem('nds_lang', currentLang);
-            applyLanguage();
-        };
-
-        function applyLanguage() {
-            document.getElementById('lang-btn').innerText = currentLang === 'en' ? 'தமிழ்' : 'ENG';
-            document.querySelectorAll('[data-key]').forEach(el => {
-                const k = el.getAttribute('data-key');
-                if(translations[currentLang][k]) el.innerText = translations[currentLang][k];
-            });
-            renderAll();
-        }
-
-        function getTrans(key) { return translations[currentLang][key] || key; }
+        function showLoading(show) { document.getElementById('loading-overlay').style.display = show ? 'flex' : 'none'; }
+        function updateProfileIcon() { const i=document.getElementById('header-profile'); if(currentUser){i.classList.add('active');i.innerText=currentUser.displayName?currentUser.displayName.charAt(0).toUpperCase():'U';}else{i.classList.remove('active');i.innerHTML='<i class="fas fa-user"></i>';} }
+        function applyLanguage() { document.getElementById('lang-btn').innerText=currentLang==='en'?'தமிழ்':'ENG'; document.querySelectorAll('[data-key]').forEach(el=>{const k=el.getAttribute('data-key');if(translations[currentLang][k])el.innerText=translations[currentLang][k];}); renderAll(); }
+        function getTrans(k) { return translations[currentLang][k] || k; }
 
         function renderAll() {
             const targets = { 'home': 'feed-stream', 'live_status': 'list-live-status', 'live_video': 'list-live-video', 'events_upcoming': 'list-event-upcoming', 'news_list': 'list-news', 'admin_list': 'admin-items-list' };
             for(let key in targets) document.getElementById(targets[key]).innerHTML = '';
 
             const sortedPosts = [...posts].sort((a,b) => b.timestamp - a.timestamp);
-
+            
+            // Standard Rendering
             sortedPosts.forEach(post => renderPostCard(post, 'home'));
             sortedPosts.filter(p => p.category === 'live' && p.mediaType === 'video').forEach(p => renderPostCard(p, 'live_video'));
             sortedPosts.filter(p => p.category === 'events').forEach(p => renderPostCard(p, 'events_upcoming'));
             sortedPosts.filter(p => p.category === 'news').forEach(p => renderPostCard(p, 'news_list'));
 
+            // Live Status Sorting
             const liveStatus = posts.filter(p => p.category === 'live' && p.mediaType !== 'video');
             liveStatus.sort((a, b) => (parseFloat(a.time) || 9999) - (parseFloat(b.time) || 9999));
             liveStatus.forEach(post => renderPostCard(post, 'live_status'));
 
+            // Admin List
             sortedPosts.forEach(post => {
                 let thumb = post.mediaType === 'video' ? `<i class="fas fa-video"></i>` : `<img src="${post.mediaSrc}" class="existing-thumb">`;
                 document.getElementById('admin-items-list').insertAdjacentHTML('beforeend', `<div class="existing-item"><div style="width:50px;text-align:center;">${thumb}</div><div class="existing-info"><span class="existing-name">${post.title}</span><span class="existing-meta">${post.category}</span></div><div class="action-buttons"><button class="btn-action btn-edit" onclick="window.editAdminPost('${post.id}')">EDIT</button><button class="btn-action btn-del" onclick="window.deletePost('${post.id}')">DEL</button></div></div>`);
@@ -530,15 +500,15 @@
             }
 
             let commentsHtml = '';
-            if(post.comments) { post.comments.forEach(c => commentsHtml += `<div class="comment-item"><b>${c.user}:</b>${c.text}</div>`); }
+            if(post.comments) { post.comments.forEach(c => commentsHtml += `<div class="comment-item"><b>${c.user}:</b> ${c.text}</div>`); }
 
             let cardContent = '';
             if(isLiveStatus) {
                 let fTime = post.time || "0.00"; if(!fTime.toLowerCase().endsWith('s')) fTime+='s';
-                cardContent = `<div class="card"><div class="card-header"><div class="avatar ${avatarClass}">${avatarText}</div><div class="user-info"><h4>${post.isAdmin?'NDS LIVE':post.author}</h4><span>${post.village}</span></div></div><div class="card-content">${mediaHtml}<div class="live-footer"><div class="bull-name">${post.title}</div><div class="bull-time">${fTime}</div></div></div><div class="card-social"><button class="social-btn" onclick="window.toggleLike('${post.id}')"><i class="far fa-heart"></i> ${post.likes||0}</button><button class="social-btn" onclick="window.toggleComments('${post.id}')"><i class="far fa-comment"></i> ${post.comments?post.comments.length:0}</button><button class="social-btn" onclick="window.sharePost('${post.id}')"><i class="fas fa-share"></i> Share</button></div><div class="comments-section" id="comments-${post.id}">${commentsHtml}<div class="comment-input-box"><input type="text" class="comment-input" id="comment-input-${post.id}" placeholder="Write a comment..."><button class="comment-send" onclick="window.addComment('${post.id}')"><i class="fas fa-paper-plane"></i></button></div></div></div>`;
+                cardContent = `<div class="card"><div class="card-header"><div class="avatar ${avatarClass}">${avatarText}</div><div class="user-info"><h4>${post.isAdmin?'NDS LIVE':post.author}</h4><span>${post.village}</span></div></div><div class="card-content">${mediaHtml}<div class="live-footer"><div class="bull-name">${post.title}</div><div class="bull-time">${fTime}</div></div></div><div class="card-social"><button class="social-btn" onclick="window.toggleLike('${post.id}')"><i class="far fa-heart"></i> ${post.likes||0}</button><button class="social-btn" onclick="window.toggleComments('${post.id}')"><i class="far fa-comment"></i> ${post.comments?post.comments.length:0}</button><button class="social-btn" onclick="window.sharePost('${post.id}')"><i class="fas fa-share"></i> Share</button></div><div class="comments-section" id="comments-${post.id}">${commentsHtml}<div class="comment-input-box"><input type="text" class="comment-input" id="comment-input-${post.id}" placeholder="Write..."><button class="comment-send" onclick="window.addComment('${post.id}')"><i class="fas fa-paper-plane"></i></button></div></div></div>`;
             } else {
                 let meta = post.category === 'events' ? `${post.village} • ${post.date}` : post.category === 'news' ? post.date : `${post.village} • ${post.time}`;
-                cardContent = `<div class="card"><div class="card-header"><div class="avatar ${avatarClass}">${avatarText}</div><div class="user-info"><h4>${post.title}</h4><span>${meta}</span></div></div><div class="card-content">${mediaHtml}${descHtml}</div><div class="card-social"><button class="social-btn" onclick="window.toggleLike('${post.id}')"><i class="far fa-heart"></i> ${post.likes||0}</button><button class="social-btn" onclick="window.toggleComments('${post.id}')"><i class="far fa-comment"></i> ${post.comments?post.comments.length:0}</button><button class="social-btn" onclick="window.sharePost('${post.id}')"><i class="fas fa-share"></i> Share</button></div><div class="comments-section" id="comments-${post.id}">${commentsHtml}<div class="comment-input-box"><input type="text" class="comment-input" id="comment-input-${post.id}" placeholder="Write a comment..."><button class="comment-send" onclick="window.addComment('${post.id}')"><i class="fas fa-paper-plane"></i></button></div></div></div>`;
+                cardContent = `<div class="card"><div class="card-header"><div class="avatar ${avatarClass}">${avatarText}</div><div class="user-info"><h4>${post.title}</h4><span>${meta}</span></div></div><div class="card-content">${mediaHtml}${descHtml}</div><div class="card-social"><button class="social-btn" onclick="window.toggleLike('${post.id}')"><i class="far fa-heart"></i> ${post.likes||0}</button><button class="social-btn" onclick="window.toggleComments('${post.id}')"><i class="far fa-comment"></i> ${post.comments?post.comments.length:0}</button><button class="social-btn" onclick="window.sharePost('${post.id}')"><i class="fas fa-share"></i> Share</button></div><div class="comments-section" id="comments-${post.id}">${commentsHtml}<div class="comment-input-box"><input type="text" class="comment-input" id="comment-input-${post.id}" placeholder="Write..."><button class="comment-send" onclick="window.addComment('${post.id}')"><i class="fas fa-paper-plane"></i></button></div></div></div>`;
             }
             container.insertAdjacentHTML('beforeend', cardContent);
         }
@@ -546,36 +516,13 @@
         function renderProfilePosts() {
             const list = document.getElementById('profile-posts-list'); list.innerHTML = '';
             if(!currentUser) return;
-            const myPosts = posts.filter(p => p.author === currentUser.displayName || (p.isAdmin && currentUser.email === 'admin@nds.com'));
+            const myPosts = posts.filter(p => p.author === (currentUser.displayName || 'User') || (isAdminUnlocked && p.isAdmin));
             myPosts.forEach(post => {
                 let thumb = post.mediaType === 'video' ? `<i class="fas fa-video"></i>` : `<img src="${post.mediaSrc}" class="existing-thumb">`;
                 list.insertAdjacentHTML('beforeend', `<div class="existing-item"><div style="width:50px;text-align:center;">${thumb}</div><div class="existing-info"><span class="existing-name">${post.title}</span><span class="existing-meta">${post.category}</span></div><div class="action-buttons"><button class="btn-action btn-del" onclick="window.deletePost('${post.id}')">DEL</button></div></div>`);
             });
         }
 
-        // EXPORTS & HELPERS
-        window.navTo = (p, b) => { document.querySelectorAll('.page-section').forEach(e=>e.classList.remove('active')); document.getElementById('page-'+p).classList.add('active'); if(b){ document.querySelectorAll('.nav-item').forEach(e=>e.classList.remove('active')); b.classList.add('active'); } window.scrollTo(0,0); };
-        window.switchSubTab = (p, s) => { document.querySelectorAll(`#page-${p} .sub-tab-btn`).forEach(b=>b.classList.remove('active')); event.target.classList.add('active'); document.querySelectorAll(`#page-${p} .sub-content`).forEach(e=>e.classList.remove('active')); document.getElementById(`${p}-${s}-content`).classList.add('active'); };
-        window.updateFileName = updateFileName;
-        window.setAdminMode = (m, b) => { document.getElementById('admin-current-mode').value=m; document.querySelectorAll('.admin-tab').forEach(t=>t.classList.remove('active')); b.classList.add('active'); document.querySelectorAll('.admin-form-container').forEach(f=>f.classList.remove('active')); document.getElementById('form-'+m).classList.add('active'); };
-        window.editAdminPost = (id) => { const p=posts.find(x=>x.id===id); window.navTo('admin',null); window.setAdminMode(p.category, document.querySelector(`.admin-tab:nth-child(${p.category=='live'?1:p.category=='events'?2:3})`)); document.getElementById('edit-post-id').value=id; if(p.category=='live'){document.getElementById('live-name').value=p.title;document.getElementById('live-village').value=p.village;document.getElementById('live-time').value=p.time;} else if(p.category=='events'){document.getElementById('event-name').value=p.title;document.getElementById('event-loc').value=p.village;document.getElementById('event-desc').value=p.desc;} else{document.getElementById('news-content').value=p.desc;} document.getElementById('btn-save-text').innerText="UPDATE"; document.getElementById('btn-cancel').style.display='block'; };
-        window.cancelEdit = () => { document.getElementById('edit-post-id').value=""; document.getElementById('btn-save-text').innerText="SAVE POST"; document.getElementById('btn-cancel').style.display='none'; document.querySelectorAll('.admin-card input,.admin-card textarea').forEach(i=>i.value=''); };
-        window.handleFabClick = () => { if(!currentUser) {if(confirm("Login?")) window.navTo('login',null);} else document.getElementById('user-modal').style.display='flex'; };
-        window.closeUserModal = () => document.getElementById('user-modal').style.display='none';
-        window.updateUserForm = () => { const c=document.getElementById('user-cat').value; document.querySelectorAll('.user-form-section').forEach(e=>e.classList.remove('active')); document.getElementById('user-form-'+c).classList.add('active'); };
-        window.checkPassword = () => { if(document.getElementById('admin-password').value==='admin123'){document.getElementById('password-modal').style.display='none';window.navTo('admin',null);}else alert("Incorrect"); };
-        window.closePasswordModal = () => document.getElementById('password-modal').style.display='none';
-        window.exitAdmin = () => { window.cancelEdit(); window.navTo('home', document.querySelector('.nav-item')); };
-        window.openLightbox = (s,t) => { const c=document.getElementById('lightbox-content'); if(t=='video') c.innerHTML=`<video src="${s}" controls autoplay style="max-width:100%;max-height:90vh;"></video>`; else c.innerHTML=`<img src="${s}" style="max-width:100%;max-height:90vh;">`; document.getElementById('lightbox-modal').style.display='flex'; };
-        window.closeLightbox = () => { document.getElementById('lightbox-modal').style.display='none'; document.getElementById('lightbox-content').innerHTML=''; };
-        window.toggleReadMore = (id) => { const s=document.getElementById(`desc-short-${id}`); const f=document.getElementById(`desc-full-${id}`); const b=document.getElementById(`btn-read-${id}`); if(s.style.display=='none'){s.style.display='inline';f.style.display='none';b.innerText=getTrans('read_more');}else{s.style.display='none';f.style.display='inline';b.innerText=getTrans('show_less');} };
-        window.handleProfileClick = handleProfileClick;
-        function showLoading(show) { document.getElementById('loading-overlay').style.display = show ? 'flex' : 'none'; }
-        function updateProfileIcon() { const i=document.getElementById('header-profile'); if(currentUser){i.classList.add('active');i.innerText=currentUser.displayName?currentUser.displayName.charAt(0).toUpperCase():'U';}else{i.classList.remove('active');i.innerHTML='<i class="fas fa-user"></i>';} }
-
-        let tapCount=0, tapTimer;
-        document.getElementById('main-nav').addEventListener('click', () => { tapCount++; clearTimeout(tapTimer); tapTimer=setTimeout(()=>{tapCount=0},800); if(tapCount===5){document.getElementById('password-modal').style.display='flex';tapCount=0;} });
-        
         const today = new Date().toISOString().split('T')[0];
         document.getElementById('live-date').value = today;
         document.getElementById('event-date').value = today;
