@@ -459,27 +459,120 @@
         function getTrans(k) { return translations[currentLang][k] || k; }
 
         function renderAll() {
-            const targets = { 'home': 'feed-stream', 'live_status': 'list-live-status', 'live_video': 'list-live-video', 'events_upcoming': 'list-event-upcoming', 'news_list': 'list-news', 'admin_list': 'admin-items-list' };
-            for(let key in targets) document.getElementById(targets[key]).innerHTML = '';
-
-            const sortedPosts = [...posts].sort((a,b) => b.timestamp - a.timestamp);
+            // 1. Define Targets
+            const targets = { 
+                'home': 'feed-stream', 
+                'live_status': 'list-live-status', 
+                'live_video': 'list-live-video', 
+                'events_upcoming': 'list-event-upcoming', 
+                'prev_live': 'list-event-previous', // New Target for Previous Live
+                'news_list': 'list-news', 
+                'admin_list': 'admin-items-list' 
+            };
             
-            // Standard Rendering
-            sortedPosts.forEach(post => renderPostCard(post, 'home'));
-            sortedPosts.filter(p => p.category === 'live' && p.mediaType === 'video').forEach(p => renderPostCard(p, 'live_video'));
-            sortedPosts.filter(p => p.category === 'events').forEach(p => renderPostCard(p, 'events_upcoming'));
-            sortedPosts.filter(p => p.category === 'news').forEach(p => renderPostCard(p, 'news_list'));
+            // 2. Clear all containers
+            for(let key in targets) {
+                const el = document.getElementById(targets[key]);
+                if(el) el.innerHTML = '';
+            }
 
-            // Live Status Sorting
-            const liveStatus = posts.filter(p => p.category === 'live' && p.mediaType !== 'video');
-            liveStatus.sort((a, b) => (parseFloat(a.time) || 9999) - (parseFloat(b.time) || 9999));
-            liveStatus.forEach(post => renderPostCard(post, 'live_status'));
+            // 3. Calculate "Active Event Date" (Logic: Day changes at 1:00 AM, not Midnight)
+            // We subtract 1 hour (3600000 ms) from current time. 
+            // If it's 00:30 AM, it counts as yesterday. If it's 1:01 AM, it counts as today.
+            const activeDate = new Date(Date.now() - 3600000).toISOString().split('T')[0];
 
-            // Admin List
+            // 4. Sort and Distribute Posts
+            const sortedPosts = [...posts].sort((a,b) => b.timestamp - a.timestamp);
+
+            // Lists for separating Live vs Previous
+            const currentLivePosts = [];
+            const pastLivePosts = [];
+
             sortedPosts.forEach(post => {
+                // RENDER: Home Feed (All posts chronological)
+                renderPostCard(post, 'home');
+
+                // RENDER: Events & News (Standard Categories)
+                if (post.category === 'events') renderPostCard(post, 'events_upcoming');
+                if (post.category === 'news') renderPostCard(post, 'news_list');
+
+                // LOGIC: Live vs Previous Live
+                if (post.category === 'live') {
+                    // Check if post belongs to the "Active Date"
+                    // If post.date matches activeDate -> It is LIVE
+                    // If post.date is older -> It is PREVIOUS
+                    if (post.date === activeDate) {
+                        currentLivePosts.push(post);
+                    } else {
+                        pastLivePosts.push(post);
+                    }
+                }
+
+                // RENDER: Admin List
                 let thumb = post.mediaType === 'video' ? `<i class="fas fa-video"></i>` : `<img src="${post.mediaSrc}" class="existing-thumb">`;
                 document.getElementById('admin-items-list').insertAdjacentHTML('beforeend', `<div class="existing-item"><div style="width:50px;text-align:center;">${thumb}</div><div class="existing-info"><span class="existing-name">${post.title}</span><span class="existing-meta">${post.category}</span></div><div class="action-buttons"><button class="btn-action btn-edit" onclick="window.editAdminPost('${post.id}')">EDIT</button><button class="btn-action btn-del" onclick="window.deletePost('${post.id}')">DEL</button></div></div>`);
             });
+
+            // 5. Render "Live Status" Tab (Current Active Date Only)
+            // Sort: Lowest Time First
+            const liveStatus = currentLivePosts.filter(p => p.mediaType !== 'video');
+            liveStatus.sort((a, b) => (parseFloat(a.time) || 9999) - (parseFloat(b.time) || 9999));
+            liveStatus.forEach(post => renderPostCard(post, 'live_status'));
+
+            // Render "Live Video" Tab (Current Active Date Only)
+            currentLivePosts.filter(p => p.mediaType === 'video').forEach(p => renderPostCard(p, 'live_video'));
+
+            // 6. Render "Previous Live" Tab (Grouped by Date Folder)
+            const prevContainer = document.getElementById('list-event-previous');
+            
+            // Group past posts by Date
+            const groupedPast = pastLivePosts.reduce((acc, post) => {
+                (acc[post.date] = acc[post.date] || []).push(post);
+                return acc;
+            }, {});
+
+            // Sort dates (Newest date first)
+            Object.keys(groupedPast).sort().reverse().forEach(dateKey => {
+                // Create Folder Header
+                const folderHTML = `
+                    <div style="margin-top:25px; margin-bottom:10px; border-bottom:1px solid #333; padding-bottom:5px; color:var(--brand-gold); font-family:'Cinzel', serif; font-size:18px;">
+                        <i class="fas fa-calendar-day" style="margin-right:8px;"></i> ${dateKey}
+                    </div>
+                    <div id="folder-${dateKey}"></div>
+                `;
+                prevContainer.insertAdjacentHTML('beforeend', folderHTML);
+
+                // Render posts into this specific folder
+                const folderDiv = document.getElementById(`folder-${dateKey}`);
+                
+                // Sort inside folder (Low time first for consistency)
+                const dayPosts = groupedPast[dateKey].sort((a, b) => (parseFloat(a.time) || 9999) - (parseFloat(b.time) || 9999));
+
+                dayPosts.forEach(post => {
+                    // Manually generating card to inject into folder ID
+                    let fTime = post.time || "0.00"; if(!fTime.toLowerCase().endsWith('s')) fTime+='s';
+                    let mediaHtml = post.mediaType === 'video' 
+                        ? `<video src="${post.mediaSrc}" controls style="width:100%; border-radius:8px; margin-top:5px;"></video>` 
+                        : `<img src="${post.mediaSrc}" onclick="window.openLightbox('${post.mediaSrc}','image')" style="width:100%; border-radius:8px; margin-top:5px;">`;
+                    
+                    const html = `
+                    <div class="card" style="border: 1px solid #222; margin-bottom:15px;">
+                        <div class="card-content">
+                            ${mediaHtml}
+                            <div class="live-footer">
+                                <div class="bull-name">${post.title}</div>
+                                <div class="bull-time">${fTime}</div>
+                            </div>
+                            <div style="font-size:12px; color:#666; margin-top:5px;">${post.village}</div>
+                        </div>
+                    </div>`;
+                    folderDiv.insertAdjacentHTML('beforeend', html);
+                });
+            });
+            
+            if (Object.keys(groupedPast).length === 0) {
+                prevContainer.innerHTML = '<div style="text-align:center; color:#555; padding:20px;">No previous records found.</div>';
+            }
         }
 
         function renderPostCard(post, target) {
