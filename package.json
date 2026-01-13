@@ -1,0 +1,11 @@
+{
+  "name": "nds-live",
+  "version": "1.0.0",
+  "description": "NDS Live Social Platform",
+  "scripts": {
+    "start": "serve ."
+  },
+  "dependencies": {
+    "serve": "^14.2.1"
+  }
+}
