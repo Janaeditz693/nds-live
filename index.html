@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NDS LIVE</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700&family=Cinzel:wght@700&display=swap" rel="stylesheet">
+    <title>NDS LIVE | Vellore Bulls</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Montserrat:wght@300;400;600;700&family=Mukta+Malar:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
@@ -102,8 +102,8 @@
         .lightbox-content { width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; }
         .lightbox-close { position: absolute; top: 20px; right: 20px; color: #fff; font-size: 30px; cursor: pointer; z-index: 3001; background: rgba(0,0,0,0.5); width: 40px; height: 40px; border-radius: 50%; text-align: center; line-height: 40px; }
         
-        .bottom-nav { position: fixed; bottom: 0; width: 100%; background-color: #000; border-top: 1px solid #222; display: flex; justify-content: space-around; padding: 10px 0; z-index: 100; user-select: none; }
-        .nav-item { display: flex; flex-direction: column; align-items: center; color: var(--text-grey); font-size: 10px; gap: 5px; cursor: pointer; background: none; border: none; }
+        .bottom-nav { position: fixed; bottom: 0; width: 100%; background-color: #000; border-top: 1px solid #222; display: flex; justify-content: space-around; padding: 15px 0; z-index: 100; user-select: none; }
+        .nav-item { display: flex; flex-direction: column; align-items: center; color: var(--text-grey); font-size: 12.5px; gap: 5px; cursor: pointer; background: none; border: none; }
         .nav-item.active { color: var(--brand-gold); }
         .page-section, .sub-content, .admin-form-container, .user-form-section { display: none; }
         .page-section.active, .sub-content.active, .admin-form-container.active, .user-form-section.active { display: block; }
@@ -111,13 +111,44 @@
         input[type="file"] { position: absolute; left: 0; top: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
         .file-custom-btn { background: #fff; color: #000; padding: 6px 12px; border-radius: 4px; font-size: 13px; margin-right: 10px; font-weight: 600; }
         .file-name { color: #fff; font-size: 14px; font-weight: 500; }
-        
+        .btn-logout { margin-top: 15px; background: var(--danger-red); color: #fff; border: none; padding: 10px 0; width: 25%; font-weight: 700; border-radius: 8px; cursor: pointer; }
         /* Profile Layout */
         .profile-hero { text-align: center; padding: 30px 20px; background: var(--card-grey); margin-bottom: 20px; border-bottom: 1px solid #222; }
         .profile-big-avatar { width: 80px; height: 80px; background: var(--brand-gold); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 30px; font-weight: bold; color: #000; margin: 0 auto 15px auto; }
         
         /* DELETE BUTTON STYLING FOR ADMIN */
         .delete-btn { position: absolute; top: 10px; right: 10px; background: rgba(255, 0, 0, 0.8); color: white; padding: 5px 10px; border-radius: 4px; font-size: 12px; border:none; cursor: pointer; z-index: 10; }
+    
+    /* FOLDER STYLES */
+.folder-header {
+    background: #1a1a1a;
+    border: 1px solid #333;
+    padding: 15px;
+    margin-bottom: 5px;
+    border-radius: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    color: var(--brand-gold);
+    font-family: 'Cinzel', serif;
+    font-size: 16px;
+    transition: background 0.3s;
+}
+.folder-header:hover { background: #222; }
+.folder-content {
+    display: none; /* Hidden by default */
+    padding: 10px 0;
+    border-left: 2px solid var(--brand-gold);
+    margin-left: 10px;
+    padding-left: 10px;
+}
+.folder-content.open { display: block; }
+    
+.secret-footer {
+    text-align: center;
+}
+
     </style>
 </head>
 <body>
@@ -166,7 +197,6 @@
             <div class="profile-name" id="profile-username">Username</div>
             <div class="profile-meta" data-key="member">Member</div>
             <button class="btn-logout" onclick="window.handleLogout()" data-key="logout">LOGOUT</button>
-            <button class="btn-logout" style="margin-top:10px; background:transparent; border:1px solid #444; color:#666; font-size:10px;" onclick="document.getElementById('password-modal').style.display='flex'">Admin Unlock</button>
         </div>
         <div class="existing-section">
             <div class="existing-title" data-key="my_posts">My Posts</div>
@@ -273,6 +303,11 @@
     </div>
     <div id="lightbox-modal" class="lightbox-modal"><div class="lightbox-close" onclick="window.closeLightbox()">×</div><div id="lightbox-content" class="lightbox-content"></div></div>
 
+    <div class="secret-footer" id="secret-footer-trigger">
+        &copy; 2026 NDS LIVE. Vellore Bulls
+    </div>
+
+    
     <nav class="bottom-nav" id="main-nav">
         <button class="nav-item active" onclick="window.navTo('home', this)"><i class="fas fa-home"></i><span data-key="nav_home">HOME</span></button>
         <button class="nav-item" onclick="window.navTo('live', this)"><i class="fas fa-pause-circle"></i><span data-key="nav_live">LIVE</span></button>
@@ -430,6 +465,18 @@
             }
         };
 
+        window.toggleFolder = (id) => {
+    const el = document.getElementById(id);
+    const icon = document.getElementById('icon-' + id);
+    if (el.style.display === 'block') {
+        el.style.display = 'none';
+        icon.className = 'fas fa-chevron-down';
+    } else {
+        el.style.display = 'block';
+        icon.className = 'fas fa-chevron-up';
+    }
+};
+
         // UI HELPERS
         window.navTo = (p, b) => { document.querySelectorAll('.page-section').forEach(e=>e.classList.remove('active')); document.getElementById('page-'+p).classList.add('active'); if(b){ document.querySelectorAll('.nav-item').forEach(e=>e.classList.remove('active')); b.classList.add('active'); } window.scrollTo(0,0); };
         window.switchSubTab = (p, s) => { document.querySelectorAll(`#page-${p} .sub-tab-btn`).forEach(b=>b.classList.remove('active')); event.target.classList.add('active'); document.querySelectorAll(`#page-${p} .sub-content`).forEach(e=>e.classList.remove('active')); document.getElementById(`${p}-${s}-content`).classList.add('active'); };
@@ -459,121 +506,116 @@
         function getTrans(k) { return translations[currentLang][k] || k; }
 
         function renderAll() {
-            // 1. Define Targets
-            const targets = { 
-                'home': 'feed-stream', 
-                'live_status': 'list-live-status', 
-                'live_video': 'list-live-video', 
-                'events_upcoming': 'list-event-upcoming', 
-                'prev_live': 'list-event-previous', // New Target for Previous Live
-                'news_list': 'list-news', 
-                'admin_list': 'admin-items-list' 
-            };
-            
-            // 2. Clear all containers
-            for(let key in targets) {
-                const el = document.getElementById(targets[key]);
-                if(el) el.innerHTML = '';
-            }
+    // 1. Clear Targets
+    const targets = { 'home': 'feed-stream', 'live_status': 'list-live-status', 'live_video': 'list-live-video', 'events_upcoming': 'list-event-upcoming', 'prev_live': 'list-event-previous', 'news_list': 'list-news', 'admin_list': 'admin-items-list' };
+    for(let key in targets) {
+        const el = document.getElementById(targets[key]);
+        if(el) el.innerHTML = '';
+    }
 
-            // 3. Calculate "Active Event Date" (Logic: Day changes at 1:00 AM, not Midnight)
-            // We subtract 1 hour (3600000 ms) from current time. 
-            // If it's 00:30 AM, it counts as yesterday. If it's 1:01 AM, it counts as today.
-            const activeDate = new Date(Date.now() - 3600000).toISOString().split('T')[0];
+    // 2. Calculate "Active Date" (1:00 AM Logic)
+    // Subtract 1 hour (3600000ms) to shift the "day change" from Midnight to 1:00 AM
+    const activeDate = new Date(Date.now() - 3600000).toISOString().split('T')[0];
 
-            // 4. Sort and Distribute Posts
-            const sortedPosts = [...posts].sort((a,b) => b.timestamp - a.timestamp);
+    // 3. Sort Posts (Newest First for Feed)
+    const sortedPosts = [...posts].sort((a,b) => b.timestamp - a.timestamp);
 
-            // Lists for separating Live vs Previous
-            const currentLivePosts = [];
-            const pastLivePosts = [];
+    // 4. Separate Live Posts
+    const currentLivePosts = [];
+    const pastLivePosts = [];
 
-            sortedPosts.forEach(post => {
-                // RENDER: Home Feed (All posts chronological)
-                renderPostCard(post, 'home');
+    // 5. PROCESS ALL POSTS
+    sortedPosts.forEach(post => {
+        // --- ADMIN LIST (Show Everything) ---
+        let thumb = post.mediaType === 'video' ? `<i class="fas fa-video"></i>` : `<img src="${post.mediaSrc}" class="existing-thumb">`;
+        document.getElementById('admin-items-list').insertAdjacentHTML('beforeend', `<div class="existing-item"><div style="width:50px;text-align:center;">${thumb}</div><div class="existing-info"><span class="existing-name">${post.title}</span><span class="existing-meta">${post.category}</span></div><div class="action-buttons"><button class="btn-action btn-edit" onclick="window.editAdminPost('${post.id}')">EDIT</button><button class="btn-action btn-del" onclick="window.deletePost('${post.id}')">DEL</button></div></div>`);
 
-                // RENDER: Events & News (Standard Categories)
-                if (post.category === 'events') renderPostCard(post, 'events_upcoming');
-                if (post.category === 'news') renderPostCard(post, 'news_list');
-
-                // LOGIC: Live vs Previous Live
-                if (post.category === 'live') {
-                    // Check if post belongs to the "Active Date"
-                    // If post.date matches activeDate -> It is LIVE
-                    // If post.date is older -> It is PREVIOUS
-                    if (post.date === activeDate) {
-                        currentLivePosts.push(post);
-                    } else {
-                        pastLivePosts.push(post);
-                    }
-                }
-
-                // RENDER: Admin List
-                let thumb = post.mediaType === 'video' ? `<i class="fas fa-video"></i>` : `<img src="${post.mediaSrc}" class="existing-thumb">`;
-                document.getElementById('admin-items-list').insertAdjacentHTML('beforeend', `<div class="existing-item"><div style="width:50px;text-align:center;">${thumb}</div><div class="existing-info"><span class="existing-name">${post.title}</span><span class="existing-meta">${post.category}</span></div><div class="action-buttons"><button class="btn-action btn-edit" onclick="window.editAdminPost('${post.id}')">EDIT</button><button class="btn-action btn-del" onclick="window.deletePost('${post.id}')">DEL</button></div></div>`);
-            });
-
-            // 5. Render "Live Status" Tab (Current Active Date Only)
-            // Sort: Lowest Time First
-            const liveStatus = currentLivePosts.filter(p => p.mediaType !== 'video');
-            liveStatus.sort((a, b) => (parseFloat(a.time) || 9999) - (parseFloat(b.time) || 9999));
-            liveStatus.forEach(post => renderPostCard(post, 'live_status'));
-
-            // Render "Live Video" Tab (Current Active Date Only)
-            currentLivePosts.filter(p => p.mediaType === 'video').forEach(p => renderPostCard(p, 'live_video'));
-
-            // 6. Render "Previous Live" Tab (Grouped by Date Folder)
-            const prevContainer = document.getElementById('list-event-previous');
-            
-            // Group past posts by Date
-            const groupedPast = pastLivePosts.reduce((acc, post) => {
-                (acc[post.date] = acc[post.date] || []).push(post);
-                return acc;
-            }, {});
-
-            // Sort dates (Newest date first)
-            Object.keys(groupedPast).sort().reverse().forEach(dateKey => {
-                // Create Folder Header
-                const folderHTML = `
-                    <div style="margin-top:25px; margin-bottom:10px; border-bottom:1px solid #333; padding-bottom:5px; color:var(--brand-gold); font-family:'Cinzel', serif; font-size:18px;">
-                        <i class="fas fa-calendar-day" style="margin-right:8px;"></i> ${dateKey}
-                    </div>
-                    <div id="folder-${dateKey}"></div>
-                `;
-                prevContainer.insertAdjacentHTML('beforeend', folderHTML);
-
-                // Render posts into this specific folder
-                const folderDiv = document.getElementById(`folder-${dateKey}`);
-                
-                // Sort inside folder (Low time first for consistency)
-                const dayPosts = groupedPast[dateKey].sort((a, b) => (parseFloat(a.time) || 9999) - (parseFloat(b.time) || 9999));
-
-                dayPosts.forEach(post => {
-                    // Manually generating card to inject into folder ID
-                    let fTime = post.time || "0.00"; if(!fTime.toLowerCase().endsWith('s')) fTime+='s';
-                    let mediaHtml = post.mediaType === 'video' 
-                        ? `<video src="${post.mediaSrc}" controls style="width:100%; border-radius:8px; margin-top:5px;"></video>` 
-                        : `<img src="${post.mediaSrc}" onclick="window.openLightbox('${post.mediaSrc}','image')" style="width:100%; border-radius:8px; margin-top:5px;">`;
-                    
-                    const html = `
-                    <div class="card" style="border: 1px solid #222; margin-bottom:15px;">
-                        <div class="card-content">
-                            ${mediaHtml}
-                            <div class="live-footer">
-                                <div class="bull-name">${post.title}</div>
-                                <div class="bull-time">${fTime}</div>
-                            </div>
-                            <div style="font-size:12px; color:#666; margin-top:5px;">${post.village}</div>
-                        </div>
-                    </div>`;
-                    folderDiv.insertAdjacentHTML('beforeend', html);
-                });
-            });
-            
-            if (Object.keys(groupedPast).length === 0) {
-                prevContainer.innerHTML = '<div style="text-align:center; color:#555; padding:20px;">No previous records found.</div>';
+        // --- CATEGORY SORTING ---
+        
+        // EVENTS & NEWS: Always go to Home + Tabs
+        if (post.category === 'events') {
+            renderPostCard(post, 'home');
+            renderPostCard(post, 'events_upcoming');
+        } else if (post.category === 'news') {
+            renderPostCard(post, 'home');
+            renderPostCard(post, 'news_list');
+        } 
+        
+        // LIVE POSTS: Strict Filtering
+        else if (post.category === 'live') {
+            if (post.date === activeDate) {
+                // IT IS TODAY (Before 1 AM next day) -> Show in Home & Live Tabs
+                currentLivePosts.push(post);
+                renderPostCard(post, 'home'); 
+            } else {
+                // IT IS OLD -> Remove from Home, Send to Archive
+                pastLivePosts.push(post);
             }
         }
+    });
+
+    // 6. RENDER CURRENT LIVE TABS (Sorted by Time: Low -> High)
+    const liveStatus = currentLivePosts.filter(p => p.mediaType !== 'video');
+    liveStatus.sort((a, b) => (parseFloat(a.time) || 9999) - (parseFloat(b.time) || 9999));
+    liveStatus.forEach(post => renderPostCard(post, 'live_status'));
+
+    const liveVideos = currentLivePosts.filter(p => p.mediaType === 'video');
+    liveVideos.forEach(post => renderPostCard(post, 'live_video'));
+
+    // 7. RENDER PREVIOUS LIVE (FOLDERS)
+    const prevContainer = document.getElementById('list-event-previous');
+    
+    // Group by Date
+    const groupedPast = pastLivePosts.reduce((acc, post) => {
+        (acc[post.date] = acc[post.date] || []).push(post);
+        return acc;
+    }, {});
+
+    // Sort Dates (Newest Folder First)
+    Object.keys(groupedPast).sort().reverse().forEach(dateKey => {
+        const folderId = `folder-${dateKey}`;
+        
+        // Create Folder Header
+        const folderHTML = `
+            <div class="folder-header" onclick="window.toggleFolder('${folderId}')">
+                <span><i class="fas fa-calendar-day"></i> ${dateKey}</span>
+                <i id="icon-${folderId}" class="fas fa-chevron-down"></i>
+            </div>
+            <div id="${folderId}" class="folder-content">
+                </div>
+        `;
+        prevContainer.insertAdjacentHTML('beforeend', folderHTML);
+
+        // Sort posts inside the folder (Low Time -> High Time)
+        const dayPosts = groupedPast[dateKey].sort((a, b) => (parseFloat(a.time) || 9999) - (parseFloat(b.time) || 9999));
+        const folderDiv = document.getElementById(folderId);
+
+        dayPosts.forEach(post => {
+            // Manual Card Generation for Folder (Simplified View)
+            let fTime = post.time || "0.00"; if(!fTime.toLowerCase().endsWith('s')) fTime+='s';
+            let mediaHtml = post.mediaType === 'video' 
+                ? `<video src="${post.mediaSrc}" controls style="width:100%; border-radius:8px; margin-top:5px;"></video>` 
+                : `<img src="${post.mediaSrc}" onclick="window.openLightbox('${post.mediaSrc}','image')" style="width:100%; border-radius:8px; margin-top:5px;">`;
+            
+            const html = `
+            <div class="card" style="border: 1px solid #333; margin-bottom:15px; background: #000;">
+                <div class="card-content">
+                    ${mediaHtml}
+                    <div class="live-footer">
+                        <div class="bull-name" style="font-size:16px;">${post.title}</div>
+                        <div class="bull-time" style="font-size:32px;">${fTime}</div>
+                    </div>
+                    <div style="font-size:12px; color:#666; margin-top:5px;">${post.village}</div>
+                </div>
+            </div>`;
+            folderDiv.insertAdjacentHTML('beforeend', html);
+        });
+    });
+
+    if (Object.keys(groupedPast).length === 0) {
+        prevContainer.innerHTML = '<div style="text-align:center; color:#555; padding:20px; font-size:12px;">No previous records found.</div>';
+    }
+}
 
         function renderPostCard(post, target) {
             const container = document.getElementById(target === 'home' ? 'feed-stream' : target === 'live_status' ? 'list-live-status' : target === 'live_video' ? 'list-live-video' : target === 'events_upcoming' ? 'list-event-upcoming' : 'list-news');
@@ -613,6 +655,18 @@
             myPosts.forEach(post => {
                 let thumb = post.mediaType === 'video' ? `<i class="fas fa-video"></i>` : `<img src="${post.mediaSrc}" class="existing-thumb">`;
                 list.insertAdjacentHTML('beforeend', `<div class="existing-item"><div style="width:50px;text-align:center;">${thumb}</div><div class="existing-info"><span class="existing-name">${post.title}</span><span class="existing-meta">${post.category}</span></div><div class="action-buttons"><button class="btn-action btn-del" onclick="window.deletePost('${post.id}')">DEL</button></div></div>`);
+            });
+        }
+
+       // --- FOOTER SECURITY ---
+        let tapCount=0, tapTimer;
+        const footerTrigger = document.getElementById('secret-footer-trigger');
+        if (footerTrigger) {
+            footerTrigger.addEventListener('click', () => { 
+                tapCount++; 
+                clearTimeout(tapTimer); 
+                tapTimer=setTimeout(()=>{tapCount=0},800); 
+                if(tapCount===5){document.getElementById('password-modal').style.display='flex';tapCount=0;} 
             });
         }
 
