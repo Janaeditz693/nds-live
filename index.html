@@ -659,10 +659,64 @@
         window.exitAdmin = () => { window.cancelEdit(); window.navTo('home', document.querySelector('.nav-item')); };
         window.openLightbox = (s,t) => { const c=document.getElementById('lightbox-content'); if(t=='video') c.innerHTML=`<video src="${s}" controls autoplay style="max-width:100%;max-height:90vh;"></video>`; else c.innerHTML=`<img src="${s}" style="max-width:100%;max-height:90vh;">`; document.getElementById('lightbox-modal').style.display='flex'; };
         window.closeLightbox = () => { document.getElementById('lightbox-modal').style.display='none'; document.getElementById('lightbox-content').innerHTML=''; };
-        window.toggleReadMore = (id) => { const s=document.getElementById(`desc-short-${id}`); const f=document.getElementById(`desc-full-${id}`); const b=document.getElementById(`btn-read-${id}`); if(s.style.display=='none'){s.style.display='inline';f.style.display='none';b.innerText=getTrans('read_more');}else{s.style.display='none';f.style.display='inline';b.innerText=getTrans('show_less');} };
-        window.handleProfileClick = () => { if(currentUser) { window.navTo('profile', null); document.getElementById('profile-username').innerText = currentUser.displayName || 'User'; document.getElementById('profile-avatar').innerText = (currentUser.displayName||'U').charAt(0).toUpperCase(); renderProfilePosts(); } else window.navTo('login', null); };
-        window.toggleLike = async (id) => { const p=posts.find(x=>x.id===id); if(p){ await updateDoc(doc(db,"posts",id),{likes:(p.likes||0)+1}); } };
-        window.sharePost = (id) => { const p=posts.find(x=>x.id===id); if(navigator.share) navigator.share({title:'NDS LIVE',text:p.title,url:window.location.href}); else alert("Link copied!"); };
+// UPDATED: Toggle Read More (Targeted)
+        window.toggleReadMore = (id, target) => { 
+            const uid = `${id}-${target}`;
+            const s=document.getElementById(`desc-short-${uid}`); 
+            const f=document.getElementById(`desc-full-${uid}`); 
+            const b=document.getElementById(`btn-read-${uid}`); 
+            if(s.style.display=='none'){
+                s.style.display='inline'; f.style.display='none'; b.innerText=getTrans('read_more');
+            } else {
+                s.style.display='none'; f.style.display='inline'; b.innerText=getTrans('show_less');
+            } 
+        };
+
+        // UPDATED: Toggle Comments (Targeted)
+        window.toggleComments = (id, target) => {
+            const uid = `${id}-${target}`;
+            document.getElementById(`comments-${uid}`).classList.toggle('open'); 
+        };
+
+        // UPDATED: Add Comment (Targeted input find, General DB save)
+        window.addComment = async (id, target) => { 
+            const uid = `${id}-${target}`;
+            const input = document.getElementById(`comment-input-${uid}`); 
+            if(!input.value) return; 
+            
+            const p = posts.find(x => x.id === id); 
+            const c = p.comments || []; 
+            c.push({user:currentUser.displayName||'Guest', text:input.value}); 
+            
+            await updateDoc(doc(db,"posts",id),{comments:c}); 
+            // Input clears automatically on re-render, but we can clear it here too
+            input.value=''; 
+        };        window.handleProfileClick = () => { if(currentUser) { window.navTo('profile', null); document.getElementById('profile-username').innerText = currentUser.displayName || 'User'; document.getElementById('profile-avatar').innerText = (currentUser.displayName||'U').charAt(0).toUpperCase(); renderProfilePosts(); } else window.navTo('login', null); };
+window.toggleLike = async (id) => {
+            // 1. Check Login
+            if(!currentUser) {
+                if(confirm("Please login to like posts.")) window.navTo('login', null);
+                return;
+            }
+
+            const p = posts.find(x => x.id === id);
+            if(p){
+                // 2. Get existing likes array (or empty array if new)
+                let likes = Array.isArray(p.likes) ? p.likes : [];
+                
+                const uid = currentUser.email; 
+
+                // 3. Toggle Logic
+                if(likes.includes(uid)) {
+                    likes = likes.filter(u => u !== uid); // Remove user (Unlike)
+                } else {
+                    likes.push(uid); // Add user (Like)
+                }
+
+                // 4. Save to Database
+                await updateDoc(doc(db,"posts",id), { likes: likes });
+            }
+        };        window.sharePost = (id) => { const p=posts.find(x=>x.id===id); if(navigator.share) navigator.share({title:'NDS LIVE',text:p.title,url:window.location.href}); else alert("Link copied!"); };
         window.toggleComments = (id) => document.getElementById(`comments-${id}`).classList.toggle('open');
         window.addComment = async (id) => { const i=document.getElementById(`comment-input-${id}`); if(!i.value)return; const p=posts.find(x=>x.id===id); const c=p.comments||[]; c.push({user:currentUser.displayName||'Guest',text:i.value}); await updateDoc(doc(db,"posts",id),{comments:c}); i.value=''; };
         window.toggleLanguage = () => { currentLang=currentLang==='en'?'ta':'en'; localStorage.setItem('nds_lang',currentLang); applyLanguage(); };
@@ -797,32 +851,116 @@ function applyLanguage() {
             const container = document.getElementById(target === 'home' ? 'feed-stream' : target === 'live_status' ? 'list-live-status' : target === 'live_video' ? 'list-live-video' : target === 'events_upcoming' ? 'list-event-upcoming' : 'list-news');
             if(!container) return;
 
+            // --- 1. UNIQUE ID GENERATION (Fixes "Read More" / "Comment" conflict) ---
+            const uid = `${post.id}-${target}`;
+
+            // --- 2. LIKE LOGIC (Fixes "One Like Per User") ---
+            const likesArr = Array.isArray(post.likes) ? post.likes : [];
+            const likeCount = likesArr.length;
+            const isLiked = currentUser && likesArr.includes(currentUser.email);
+            const heartIcon = isLiked ? 'fas fa-heart' : 'far fa-heart';
+            const btnClass = isLiked ? 'social-btn liked' : 'social-btn';
+
+            // --- 3. MEDIA & AVATAR ---
             let isLiveStatus = (post.category === 'live' && post.mediaType !== 'video');
             let mediaHtml = post.mediaType === 'video' ? `<video src="${post.mediaSrc}" muted onclick="window.openLightbox('${post.mediaSrc}','video')"></video>` : `<img src="${post.mediaSrc}" onclick="window.openLightbox('${post.mediaSrc}','image')">`;
             const avatarClass = post.isAdmin ? 'nds' : 'user';
             const avatarText = post.isAdmin ? 'N' : post.author.charAt(0).toUpperCase();
             
+            // --- 4. READ MORE LOGIC ---
             let descHtml = '';
             if(post.desc) {
                 if(post.desc.length > 100) {
                     const short = post.desc.substring(0, 100) + "...";
-                    descHtml = `<div class="card-desc"><span id="desc-short-${post.id}">${short}</span><span id="desc-full-${post.id}" style="display:none">${post.desc}</span><span class="read-more-btn" id="btn-read-${post.id}" onclick="window.toggleReadMore('${post.id}')">${getTrans('read_more')}</span></div>`;
+                    // Using 'uid' here to ensure the button opens THIS specific card
+                    descHtml = `<div class="card-desc"><span id="desc-short-${uid}">${short}</span><span id="desc-full-${uid}" style="display:none">${post.desc}</span><span class="read-more-btn" id="btn-read-${uid}" onclick="window.toggleReadMore('${post.id}', '${target}')">${getTrans('read_more')}</span></div>`;
                 } else descHtml = `<div class="card-desc">${post.desc}</div>`;
             }
 
+            // --- 5. COMMENTS ---
             let commentsHtml = '';
-            if(post.comments) { post.comments.forEach(c => commentsHtml += `<div class="comment-item"><b>${c.user}:</b> ${c.text}</div>`); }
+            if(post.comments) { post.comments.forEach(c => commentsHtml += `<div class="comment-item"><b>${c.user}:</b>${c.text}</div>`); }
 
+            // --- 6. CARD ASSEMBLY ---
             let cardContent = '';
-            if(isLiveStatus) {
+            
+            // Layout A: Live Status (Bull Name & Time)
+            if (isLiveStatus) {
                 let fTime = post.time || "0.00"; if(!fTime.toLowerCase().endsWith('s')) fTime+='s';
-                cardContent = `<div class="card"><div class="card-header"><div class="avatar ${avatarClass}">${avatarText}</div><div class="user-info"><h4>${post.isAdmin?'NDS LIVE':post.author}</h4><span>${post.village}</span></div></div><div class="card-content">${mediaHtml}<div class="live-footer"><div class="bull-name">${post.title}</div><div class="bull-time">${fTime}</div></div></div><div class="card-social"><button class="social-btn" onclick="window.toggleLike('${post.id}')"><i class="far fa-heart"></i> ${post.likes||0}</button><button class="social-btn" onclick="window.toggleComments('${post.id}')"><i class="far fa-comment"></i> ${post.comments?post.comments.length:0}</button><button class="social-btn" onclick="window.sharePost('${post.id}')"><i class="fas fa-share"></i> Share</button></div><div class="comments-section" id="comments-${post.id}">${commentsHtml}<div class="comment-input-box"><input type="text" class="comment-input" id="comment-input-${post.id}" placeholder="Write..."><button class="comment-send" onclick="window.addComment('${post.id}')"><i class="fas fa-paper-plane"></i></button></div></div></div>`;
-            } else {
+                cardContent = `
+                <div class="card">
+                    <div class="card-header"><div class="avatar ${avatarClass}">${avatarText}</div><div class="user-info"><h4>${post.isAdmin?'NDS LIVE':post.author}</h4><span>${post.village}</span></div></div>
+                    <div class="card-content">${mediaHtml}<div class="live-footer"><div class="bull-name">${post.title}</div><div class="bull-time">${fTime}</div></div></div>
+                    <div class="card-social">
+                        <button class="${btnClass}" onclick="window.toggleLike('${post.id}')"><i class="${heartIcon}"></i> ${likeCount}</button>
+                        <button class="social-btn" onclick="window.toggleComments('${post.id}', '${target}')"><i class="far fa-comment"></i> ${post.comments?post.comments.length:0}</button>
+                        <button class="social-btn" onclick="window.sharePost('${post.id}')"><i class="fas fa-share"></i> Share</button>
+                    </div>
+                    <div class="comments-section" id="comments-${uid}">
+                        ${commentsHtml}
+                        <div class="comment-input-box"><input type="text" class="comment-input" id="comment-input-${uid}" placeholder="Write..."><button class="comment-send" onclick="window.addComment('${post.id}', '${target}')"><i class="fas fa-paper-plane"></i></button></div>
+                    </div>
+                </div>`;
+            } 
+            // Layout B: Standard (News/Events)
+            else {
                 let meta = post.category === 'events' ? `${post.village} • ${post.date}` : post.category === 'news' ? post.date : `${post.village} • ${post.time}`;
-                cardContent = `<div class="card"><div class="card-header"><div class="avatar ${avatarClass}">${avatarText}</div><div class="user-info"><h4>${post.title}</h4><span>${meta}</span></div></div><div class="card-content">${mediaHtml}${descHtml}</div><div class="card-social"><button class="social-btn" onclick="window.toggleLike('${post.id}')"><i class="far fa-heart"></i> ${post.likes||0}</button><button class="social-btn" onclick="window.toggleComments('${post.id}')"><i class="far fa-comment"></i> ${post.comments?post.comments.length:0}</button><button class="social-btn" onclick="window.sharePost('${post.id}')"><i class="fas fa-share"></i> Share</button></div><div class="comments-section" id="comments-${post.id}">${commentsHtml}<div class="comment-input-box"><input type="text" class="comment-input" id="comment-input-${post.id}" placeholder="Write..."><button class="comment-send" onclick="window.addComment('${post.id}')"><i class="fas fa-paper-plane"></i></button></div></div></div>`;
+                cardContent = `
+                <div class="card">
+                    <div class="card-header"><div class="avatar ${avatarClass}">${avatarText}</div><div class="user-info"><h4>${post.title}</h4><span>${meta}</span></div></div>
+                    <div class="card-content">${mediaHtml}${descHtml}</div>
+                    <div class="card-social">
+                        <button class="${btnClass}" onclick="window.toggleLike('${post.id}')"><i class="${heartIcon}"></i> ${likeCount}</button>
+                        <button class="social-btn" onclick="window.toggleComments('${post.id}', '${target}')"><i class="far fa-comment"></i> ${post.comments?post.comments.length:0}</button>
+                        <button class="social-btn" onclick="window.sharePost('${post.id}')"><i class="fas fa-share"></i> Share</button>
+                    </div>
+                    <div class="comments-section" id="comments-${uid}">
+                        ${commentsHtml}
+                        <div class="comment-input-box"><input type="text" class="comment-input" id="comment-input-${uid}" placeholder="Write a comment..."><button class="comment-send" onclick="window.addComment('${post.id}', '${target}')"><i class="fas fa-paper-plane"></i></button></div>
+                    </div>
+                </div>`;
             }
             container.insertAdjacentHTML('beforeend', cardContent);
         }
+            
+            // --- LIVE STATUS CARD ---
+            if (isLiveStatus) {
+                let fTime = post.time || "0.00"; if(!fTime.toLowerCase().endsWith('s')) fTime+='s';
+                cardContent = `
+                <div class="card">
+                    <div class="card-header"><div class="avatar ${avatarClass}">${avatarText}</div><div class="user-info"><h4>${post.isAdmin?'NDS LIVE':post.author}</h4><span>${post.village}</span></div></div>
+                    <div class="card-content">${mediaHtml}<div class="live-footer"><div class="bull-name">${post.title}</div><div class="bull-time">${fTime}</div></div></div>
+                    <div class="card-social">
+                        <button class="${btnClass}" onclick="window.toggleLike('${post.id}')"><i class="${heartIcon}"></i> ${likeCount}</button>
+                        <button class="social-btn" onclick="window.toggleComments('${post.id}')"><i class="far fa-comment"></i> ${post.comments?post.comments.length:0}</button>
+                        <button class="social-btn" onclick="window.sharePost('${post.id}')"><i class="fas fa-share"></i> Share</button>
+                    </div>
+                    <div class="comments-section" id="comments-${post.id}">
+                        ${commentsHtml}
+                        <div class="comment-input-box"><input type="text" class="comment-input" id="comment-input-${post.id}" placeholder="Write..."><button class="comment-send" onclick="window.addComment('${post.id}')"><i class="fas fa-paper-plane"></i></button></div>
+                    </div>
+                </div>`;
+            } 
+            // --- STANDARD CARD (Events/News/LiveVideo) ---
+            else {
+                let meta = post.category === 'events' ? `${post.village} • ${post.date}` : post.category === 'news' ? post.date : `${post.village} • ${post.time}`;
+                cardContent = `
+                <div class="card">
+                    <div class="card-header"><div class="avatar ${avatarClass}">${avatarText}</div><div class="user-info"><h4>${post.title}</h4><span>${meta}</span></div></div>
+                    <div class="card-content">${mediaHtml}${descHtml}</div>
+                    <div class="card-social">
+                        <button class="${btnClass}" onclick="window.toggleLike('${post.id}')"><i class="${heartIcon}"></i> ${likeCount}</button>
+                        <button class="social-btn" onclick="window.toggleComments('${post.id}')"><i class="far fa-comment"></i> ${post.comments?post.comments.length:0}</button>
+                        <button class="social-btn" onclick="window.sharePost('${post.id}')"><i class="fas fa-share"></i> Share</button>
+                    </div>
+                    <div class="comments-section" id="comments-${post.id}">
+                        ${commentsHtml}
+                        <div class="comment-input-box"><input type="text" class="comment-input" id="comment-input-${post.id}" placeholder="Write a comment..."><button class="comment-send" onclick="window.addComment('${post.id}')"><i class="fas fa-paper-plane"></i></button></div>
+                    </div>
+                </div>`;
+            }
+            container.insertAdjacentHTML('beforeend', cardContent);
+        
 
         function renderProfilePosts() {
             const list = document.getElementById('profile-posts-list'); list.innerHTML = '';
