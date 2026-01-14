@@ -149,6 +149,35 @@
     text-align: center;
 }
 
+/* MORE PAGE STYLES */
+.more-link {
+    background: #1a1a1a;
+    border: 1px solid #333;
+    padding: 15px;
+    margin-bottom: 10px;
+    border-radius: 8px;
+    color: #fff;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.more-link:hover { border-color: var(--brand-gold); color: var(--brand-gold); }
+.more-content {
+    display: none;
+    background: #111;
+    padding: 15px;
+    border-radius: 8px;
+    border: 1px solid #333;
+    margin-bottom: 15px;
+    color: #ccc;
+    font-size: 13px;
+    line-height: 1.6;
+}
+.more-content.open { display: block; }
+
     </style>
 </head>
 <body>
@@ -189,6 +218,34 @@
     <div id="page-news" class="page-section">
         <h2 style="padding:15px 20px; font-size:24px; font-weight:800;" data-key="news_title">Latest News</h2>
         <div class="feed-container" id="list-news"></div>
+    </div>
+
+    <div id="page-more" class="page-section">
+        <h2 style="padding:15px 20px; font-size:24px; font-weight:800;" data-key="nav_more">More</h2>
+        <div class="feed-container">
+            
+            <div class="more-link" onclick="document.getElementById('content-contact').classList.toggle('open')">
+                <span data-key="link_contact">Contact Us</span> <i class="fas fa-chevron-down"></i>
+            </div>
+            <div id="content-contact" class="more-content">
+                <div data-key="txt_contact"></div>
+            </div>
+
+            <div class="more-link" onclick="document.getElementById('content-privacy').classList.toggle('open')">
+                <span data-key="link_privacy">Privacy Policy</span> <i class="fas fa-chevron-down"></i>
+            </div>
+            <div id="content-privacy" class="more-content">
+                <div data-key="txt_privacy"></div>
+            </div>
+
+            <div class="more-link" onclick="document.getElementById('content-terms').classList.toggle('open')">
+                <span data-key="link_terms">Terms & Conditions</span> <i class="fas fa-chevron-down"></i>
+            </div>
+            <div id="content-terms" class="more-content">
+                <div data-key="txt_terms"></div>
+            </div>
+
+        </div>
     </div>
 
     <div id="page-profile" class="page-section">
@@ -313,7 +370,7 @@
         <button class="nav-item" onclick="window.navTo('live', this)"><i class="fas fa-pause-circle"></i><span data-key="nav_live">LIVE</span></button>
         <button class="nav-item" onclick="window.navTo('events', this)"><i class="fas fa-calendar-alt"></i><span data-key="nav_events">EVENTS</span></button>
         <button class="nav-item" onclick="window.navTo('news', this)"><i class="fas fa-newspaper"></i><span data-key="nav_news">NEWS</span></button>
-        <button class="nav-item"><i class="fas fa-bars"></i><span data-key="nav_more">MORE</span></button>
+        <button class="nav-item" onclick="window.navTo('more', this)"><i class="fas fa-bars"></i><span data-key="nav_more">MORE</span></button>
     </nav>
 
     <script type="module">
@@ -342,8 +399,118 @@
         let isAdminUnlocked = false;
 
         const translations = {
-            en: { feed_title:"Today's Feed", nav_home:"HOME", nav_live:"LIVE", nav_events:"EVENTS", nav_news:"NEWS", nav_more:"MORE", tab_status:"Live Status", tab_video:"Live Video", tab_upcoming:"Upcoming", tab_previous:"Previous Live", news_title:"Latest News", member:"Member", logout:"LOGOUT", my_posts:"My Posts", login_title:"Welcome Back", login_btn:"LOGIN", create_acc:"Create New Account", reg_title:"Create Account", reg_btn:"REGISTER", have_acc:"Login instead?", create_post:"Create Post", post_now:"POST NOW", cancel:"CANCEL", read_more:"Read More", show_less:"Show Less" },
-            ta: { feed_title:"இன்றைய செய்திகள்", nav_home:"முகப்பு", nav_live:"நேரலை", nav_events:"நிகழ்வு", nav_news:"செய்தி", nav_more:"மேலும்", tab_status:"நேரலை நிலவரம்", tab_video:"நேரலை காணொளி", tab_upcoming:"வரவிருக்கும்", tab_previous:"முந்தைய", news_title:"சமீபத்திய செய்திகள்", member:"உறுப்பினர்", logout:"வெளியேறு", my_posts:"என் பதிவுகள்", login_title:"நல்வரவு", login_btn:"உள்நுழைய", create_acc:"புதிய கணக்கை உருவாக்கு", reg_title:"கணக்கு துவங்கு", reg_btn:"பதிவு செய்", have_acc:"உள்நுழைய வேண்டுமா?", create_post:"பதிவிடவும்", post_now:"பதிவிடு", cancel:"ரத்து", read_more:"மேலும் படிக்க", show_less:"சுருக்க" }
+            en: { 
+                feed_title:"Today's Feed", nav_home:"HOME", nav_live:"LIVE", nav_events:"EVENTS", nav_news:"NEWS", nav_more:"MORE", 
+                tab_status:"Live Status", tab_video:"Live Video", tab_upcoming:"Upcoming", tab_previous:"Previous Live", 
+                news_title:"Latest News", member:"Member", logout:"LOGOUT", my_posts:"My Posts", 
+                login_title:"Welcome Back", login_btn:"LOGIN", create_acc:"Create New Account", 
+                reg_title:"Create Account", reg_btn:"REGISTER", have_acc:"Login instead?", 
+                create_post:"Create Post", post_now:"POST NOW", cancel:"CANCEL", read_more:"Read More", show_less:"Show Less",
+                
+                // More Page Links
+                link_contact: "Contact Us",
+                link_privacy: "Privacy Policy",
+                link_terms: "Terms & Conditions",
+
+                // CONTACT CONTENT (English)
+                txt_contact: `
+                    <h2>Contact Us</h2>
+                    <p>If you have any questions, concerns, or suggestions about NDS LIVE, feel free to reach out to us.</p>
+                    <ul>
+                        <li><strong>Email:</strong> <a href="mailto:support@ndslive.in" style="color:var(--brand-gold)">support@ndslive.in</a></li>
+                        <li><strong>Address:</strong> NDS LIVE Support, Vellore, Tamil Nadu, India</li>
+                        <li><strong>Social:</strong> Instagram / Facebook – @NDSLIVE</li>
+                    </ul>`,
+
+                // PRIVACY CONTENT (English)
+                txt_privacy: `
+                    <h2>Privacy Policy</h2>
+                    <p><strong>Last Updated:</strong> Jan 2026</p>
+                    <h3>1. Information We Collect</h3>
+                    <p>We collect limited information required for using NDS LIVE, such as usernames and posts you create. We do not collect personal data like phone numbers, addresses, or payment information.</p>
+                    <h3>2. Use of Information</h3>
+                    <p>Your information is used only to manage your account, display posts, and improve the community experience. We never sell or share your information with third parties.</p>
+                    <h3>3. Data Storage & Security</h3>
+                    <p>All user data is securely stored. Reasonable measures are taken to protect data from unauthorized access or misuse.</p>
+                    <h3>4. Cookies & Analytics</h3>
+                    <p>NDS LIVE may use browser storage to keep you logged in. We do not use tracking cookies or external analytics that identify users.</p>
+                    <h3>5. Your Rights</h3>
+                    <p>You may request account deletion or correction of your data by contacting us at support@ndslive.in.</p>
+                    <h3>6. Policy Updates</h3>
+                    <p>This policy may be updated periodically. Major updates will be posted on our website.</p>`,
+
+                // TERMS CONTENT (English)
+                txt_terms: `
+                    <h2>Terms & Conditions</h2>
+                    <p><strong>Effective Date:</strong> Jan 2026</p>
+                    <h3>1. Acceptance</h3>
+                    <p>By accessing or using NDS LIVE, you agree to these Terms & Conditions and our Privacy Policy.</p>
+                    <h3>2. User Responsibilities</h3>
+                    <p>Users must not post offensive, misleading, or harmful content. Violations may result in account suspension or permanent removal.</p>
+                    <h3>3. Content Ownership</h3>
+                    <p>All NDS LIVE content related to Vellore Bulls remains the property of NDS LIVE. User posts remain their own content, but by posting, you grant NDS LIVE permission to display it publicly.</p>
+                    <h3>4. Service Availability</h3>
+                    <p>NDS LIVE may change or discontinue features at any time without notice. We strive to keep the service available but do not guarantee uninterrupted uptime.</p>
+                    <h3>5. Limitation of Liability</h3>
+                    <p>NDS LIVE is not responsible for any loss or damage arising from use of the service or user-generated content.</p>
+                    <h3>6. Governing Law</h3>
+                    <p>These Terms are governed by the laws of India.</p>`
+            },
+            ta: { 
+                feed_title:"இன்றைய செய்திகள்", nav_home:"முகப்பு", nav_live:"நேரலை", nav_events:"நிகழ்வு", nav_news:"செய்தி", nav_more:"மேலும்", 
+                tab_status:"நேரலை நிலவரம்", tab_video:"நேரலை காணொளி", tab_upcoming:"வரவிருக்கும்", tab_previous:"முந்தைய", 
+                news_title:"சமீபத்திய செய்திகள்", member:"உறுப்பினர்", logout:"வெளியேறு", my_posts:"என் பதிவுகள்", 
+                login_title:"நல்வரவு", login_btn:"உள்நுழைய", create_acc:"புதிய கணக்கை உருவாக்கு", 
+                reg_title:"கணக்கு துவங்கு", reg_btn:"பதிவு செய்", have_acc:"உள்நுழைய வேண்டுமா?", 
+                create_post:"பதிவிடவும்", post_now:"பதிவிடு", cancel:"ரத்து", read_more:"மேலும் படிக்க", show_less:"சுருக்க",
+                
+                // More Page Links (Tamil)
+                link_contact: "தொடர்பு கொள்ள",
+                link_privacy: "தனியுரிமைக் கொள்கை",
+                link_terms: "விதிமுறைகள் & நிபந்தனைகள்",
+
+                // CONTACT CONTENT (Tamil)
+                txt_contact: `
+                    <h2>எங்களை தொடர்பு கொள்ள</h2>
+                    <p>NDS LIVE குறித்த கேள்விகள் அல்லது ஆலோசனைகளுக்கு எங்களை தொடர்பு கொள்ளலாம்.</p>
+                    <ul>
+                        <li><strong>மின்னஞ்சல்:</strong> <a href="mailto:support@ndslive.in" style="color:var(--brand-gold)">support@ndslive.in</a></li>
+                        <li><strong>முகவரி:</strong> NDS LIVE Support, வேலூர், தமிழ்நாடு.</li>
+                        <li><strong>சமூகம்:</strong> Instagram / Facebook – @NDSLIVE</li>
+                    </ul>`,
+
+                // PRIVACY CONTENT (Tamil)
+                txt_privacy: `
+                    <h2>தனியுரிமைக் கொள்கை</h2>
+                    <p><strong>புதுப்பிக்கப்பட்டது:</strong> ஜனவரி 2026</p>
+                    <h3>1. நாங்கள் சேகரிக்கும் தகவல்கள்</h3>
+                    <p>பயனர் பெயர் மற்றும் பதிவுகள் போன்ற அடிப்படை தகவல்களை மட்டுமே சேகரிக்கிறோம். தொலைபேசி எண் அல்லது வங்கி விவரங்களை சேகரிப்பதில்லை.</p>
+                    <h3>2. தகவலின் பயன்பாடு</h3>
+                    <p>உங்கள் கணக்கை நிர்வகிக்கவும், பதிவுகளைக் காட்டவும் மட்டுமே இது பயன்படுத்தப்படுகிறது. மூன்றாம் தரப்பினருக்கு விற்பனை செய்வதில்லை.</p>
+                    <h3>3. தரவு பாதுகாப்பு</h3>
+                    <p>அனைத்து பயனர் தரவுகளும் பாதுகாப்பாக சேமிக்கப்படுகின்றன.</p>
+                    <h3>4. குக்கீகள்</h3>
+                    <p>உள்நுழைவு வசதிக்காக மட்டுமே பிரவுசர் சேமிப்பகம் பயன்படுத்தப்படுகிறது.</p>
+                    <h3>5. உங்கள் உரிமைகள்</h3>
+                    <p>கணக்கை நீக்க support@ndslive.in ஐ தொடர்பு கொள்ளவும்.</p>`,
+
+                // TERMS CONTENT (Tamil)
+                txt_terms: `
+                    <h2>விதிமுறைகள் மற்றும் நிபந்தனைகள்</h2>
+                    <p><strong>தேதி:</strong> ஜனவரி 2026</p>
+                    <h3>1. ஏற்பு</h3>
+                    <p>NDS LIVE ஐ பயன்படுத்துவதன் மூலம், இந்த விதிமுறைகளை ஒப்புக்கொள்கிறீர்கள்.</p>
+                    <h3>2. பயனர் பொறுப்புகள்</h3>
+                    <p>தவறான அல்லது புண்படுத்தும் உள்ளடக்கத்தைப் பதிவிடக்கூடாது. மீறினால் கணக்கு நீக்கப்படும்.</p>
+                    <h3>3. உள்ளடக்க உரிமை</h3>
+                    <p>வேலூர் காளைகள் தொடர்பான அனைத்து உள்ளடக்கங்களும் NDS LIVE க்கு சொந்தமானவை.</p>
+                    <h3>4. சேவை கிடைக்கும் தன்மை</h3>
+                    <p>எந்த நேரத்திலும் சேவையில் மாற்றங்கள் ஏற்படலாம்.</p>
+                    <h3>5. பொறுப்புத்துறப்பு</h3>
+                    <p>சேவையைப் பயன்படுத்துவதால் ஏற்படும் இழப்புகளுக்கு NDS LIVE பொறுப்பல்ல.</p>
+                    <h3>6. சட்டம்</h3>
+                    <p>இந்த விதிமுறைகள் இந்திய சட்டங்களுக்கு உட்பட்டவை.</p>`
+            }
         };
 
         onAuthStateChanged(auth, (user) => {
@@ -502,8 +669,17 @@
 
         function showLoading(show) { document.getElementById('loading-overlay').style.display = show ? 'flex' : 'none'; }
         function updateProfileIcon() { const i=document.getElementById('header-profile'); if(currentUser){i.classList.add('active');i.innerText=currentUser.displayName?currentUser.displayName.charAt(0).toUpperCase():'U';}else{i.classList.remove('active');i.innerHTML='<i class="fas fa-user"></i>';} }
-        function applyLanguage() { document.getElementById('lang-btn').innerText=currentLang==='en'?'தமிழ்':'ENG'; document.querySelectorAll('[data-key]').forEach(el=>{const k=el.getAttribute('data-key');if(translations[currentLang][k])el.innerText=translations[currentLang][k];}); renderAll(); }
-        function getTrans(k) { return translations[currentLang][k] || k; }
+function applyLanguage() {
+            document.getElementById('lang-btn').innerText = currentLang === 'en' ? 'தமிழ்' : 'ENG';
+            document.querySelectorAll('[data-key]').forEach(el => {
+                const k = el.getAttribute('data-key');
+                if(translations[currentLang][k]) {
+                    // CHANGED FROM innerText TO innerHTML to support <h2>, <ul>, etc.
+                    el.innerHTML = translations[currentLang][k]; 
+                }
+            });
+            renderAll();
+        }        function getTrans(k) { return translations[currentLang][k] || k; }
 
         function renderAll() {
     // 1. Clear Targets
