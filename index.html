@@ -92,6 +92,7 @@
         .btn-action { padding: 6px 12px; border-radius: 4px; border: none; font-weight: bold; font-size: 12px; cursor: pointer; }
         .btn-edit { background: #333; color: #fff; border: 1px solid #444; }
         .btn-del { background: var(--danger-red); color: #fff; }
+        .exit-btn {padding: 13px; background-color: #ffffff; border-radius: 10px;}
 
         /* UTILS */
         .fab { position: fixed; bottom: 80px; right: 20px; width: 55px; height: 55px; background-color: var(--brand-gold); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; color: #000; cursor: pointer; z-index: 90; }
@@ -659,39 +660,8 @@
         window.exitAdmin = () => { window.cancelEdit(); window.navTo('home', document.querySelector('.nav-item')); };
         window.openLightbox = (s,t) => { const c=document.getElementById('lightbox-content'); if(t=='video') c.innerHTML=`<video src="${s}" controls autoplay style="max-width:100%;max-height:90vh;"></video>`; else c.innerHTML=`<img src="${s}" style="max-width:100%;max-height:90vh;">`; document.getElementById('lightbox-modal').style.display='flex'; };
         window.closeLightbox = () => { document.getElementById('lightbox-modal').style.display='none'; document.getElementById('lightbox-content').innerHTML=''; };
-// UPDATED: Toggle Read More (Targeted)
-        window.toggleReadMore = (id, target) => { 
-            const uid = `${id}-${target}`;
-            const s=document.getElementById(`desc-short-${uid}`); 
-            const f=document.getElementById(`desc-full-${uid}`); 
-            const b=document.getElementById(`btn-read-${uid}`); 
-            if(s.style.display=='none'){
-                s.style.display='inline'; f.style.display='none'; b.innerText=getTrans('read_more');
-            } else {
-                s.style.display='none'; f.style.display='inline'; b.innerText=getTrans('show_less');
-            } 
-        };
-
-        // UPDATED: Toggle Comments (Targeted)
-        window.toggleComments = (id, target) => {
-            const uid = `${id}-${target}`;
-            document.getElementById(`comments-${uid}`).classList.toggle('open'); 
-        };
-
-        // UPDATED: Add Comment (Targeted input find, General DB save)
-        window.addComment = async (id, target) => { 
-            const uid = `${id}-${target}`;
-            const input = document.getElementById(`comment-input-${uid}`); 
-            if(!input.value) return; 
-            
-            const p = posts.find(x => x.id === id); 
-            const c = p.comments || []; 
-            c.push({user:currentUser.displayName||'Guest', text:input.value}); 
-            
-            await updateDoc(doc(db,"posts",id),{comments:c}); 
-            // Input clears automatically on re-render, but we can clear it here too
-            input.value=''; 
-        };        window.handleProfileClick = () => { if(currentUser) { window.navTo('profile', null); document.getElementById('profile-username').innerText = currentUser.displayName || 'User'; document.getElementById('profile-avatar').innerText = (currentUser.displayName||'U').charAt(0).toUpperCase(); renderProfilePosts(); } else window.navTo('login', null); };
+        window.toggleReadMore = (id) => { const s=document.getElementById(`desc-short-${id}`); const f=document.getElementById(`desc-full-${id}`); const b=document.getElementById(`btn-read-${id}`); if(s.style.display=='none'){s.style.display='inline';f.style.display='none';b.innerText=getTrans('read_more');}else{s.style.display='none';f.style.display='inline';b.innerText=getTrans('show_less');} };
+        window.handleProfileClick = () => { if(currentUser) { window.navTo('profile', null); document.getElementById('profile-username').innerText = currentUser.displayName || 'User'; document.getElementById('profile-avatar').innerText = (currentUser.displayName||'U').charAt(0).toUpperCase(); renderProfilePosts(); } else window.navTo('login', null); };
 window.toggleLike = async (id) => {
             // 1. Check Login
             if(!currentUser) {
@@ -848,80 +818,42 @@ function applyLanguage() {
 }
 
         function renderPostCard(post, target) {
-            const container = document.getElementById(target === 'home' ? 'feed-stream' : target === 'live_status' ? 'list-live-status' : target === 'live_video' ? 'list-live-video' : target === 'events_upcoming' ? 'list-event-upcoming' : 'list-news');
+            let container = null;
+            if(target === 'home') container = document.getElementById('feed-stream');
+            if(target === 'live_status') container = document.getElementById('list-live-status');
+            if(target === 'live_video') container = document.getElementById('list-live-video');
+            if(target === 'events_upcoming') container = document.getElementById('list-event-upcoming');
+            if(target === 'news_list') container = document.getElementById('list-news');
             if(!container) return;
 
-            // --- 1. UNIQUE ID GENERATION (Fixes "Read More" / "Comment" conflict) ---
-            const uid = `${post.id}-${target}`;
-
-            // --- 2. LIKE LOGIC (Fixes "One Like Per User") ---
+            // --- LIKE LOGIC UI ---
+            // Ensure likes is an array
             const likesArr = Array.isArray(post.likes) ? post.likes : [];
             const likeCount = likesArr.length;
+            // Check if current user is in the list
             const isLiked = currentUser && likesArr.includes(currentUser.email);
+            // Red Heart (fas) vs Outline Heart (far)
             const heartIcon = isLiked ? 'fas fa-heart' : 'far fa-heart';
             const btnClass = isLiked ? 'social-btn liked' : 'social-btn';
 
-            // --- 3. MEDIA & AVATAR ---
+            // Layout Logic
             let isLiveStatus = (post.category === 'live' && post.mediaType !== 'video');
             let mediaHtml = post.mediaType === 'video' ? `<video src="${post.mediaSrc}" muted onclick="window.openLightbox('${post.mediaSrc}','video')"></video>` : `<img src="${post.mediaSrc}" onclick="window.openLightbox('${post.mediaSrc}','image')">`;
             const avatarClass = post.isAdmin ? 'nds' : 'user';
             const avatarText = post.isAdmin ? 'N' : post.author.charAt(0).toUpperCase();
             
-            // --- 4. READ MORE LOGIC ---
             let descHtml = '';
             if(post.desc) {
                 if(post.desc.length > 100) {
                     const short = post.desc.substring(0, 100) + "...";
-                    // Using 'uid' here to ensure the button opens THIS specific card
-                    descHtml = `<div class="card-desc"><span id="desc-short-${uid}">${short}</span><span id="desc-full-${uid}" style="display:none">${post.desc}</span><span class="read-more-btn" id="btn-read-${uid}" onclick="window.toggleReadMore('${post.id}', '${target}')">${getTrans('read_more')}</span></div>`;
+                    descHtml = `<div class="card-desc"><span id="desc-short-${post.id}">${short}</span><span id="desc-full-${post.id}" style="display:none">${post.desc}</span><span class="read-more-btn" id="btn-read-${post.id}" onclick="window.toggleReadMore('${post.id}')">${getTrans('read_more')}</span></div>`;
                 } else descHtml = `<div class="card-desc">${post.desc}</div>`;
             }
 
-            // --- 5. COMMENTS ---
             let commentsHtml = '';
             if(post.comments) { post.comments.forEach(c => commentsHtml += `<div class="comment-item"><b>${c.user}:</b>${c.text}</div>`); }
 
-            // --- 6. CARD ASSEMBLY ---
             let cardContent = '';
-            
-            // Layout A: Live Status (Bull Name & Time)
-            if (isLiveStatus) {
-                let fTime = post.time || "0.00"; if(!fTime.toLowerCase().endsWith('s')) fTime+='s';
-                cardContent = `
-                <div class="card">
-                    <div class="card-header"><div class="avatar ${avatarClass}">${avatarText}</div><div class="user-info"><h4>${post.isAdmin?'NDS LIVE':post.author}</h4><span>${post.village}</span></div></div>
-                    <div class="card-content">${mediaHtml}<div class="live-footer"><div class="bull-name">${post.title}</div><div class="bull-time">${fTime}</div></div></div>
-                    <div class="card-social">
-                        <button class="${btnClass}" onclick="window.toggleLike('${post.id}')"><i class="${heartIcon}"></i> ${likeCount}</button>
-                        <button class="social-btn" onclick="window.toggleComments('${post.id}', '${target}')"><i class="far fa-comment"></i> ${post.comments?post.comments.length:0}</button>
-                        <button class="social-btn" onclick="window.sharePost('${post.id}')"><i class="fas fa-share"></i> Share</button>
-                    </div>
-                    <div class="comments-section" id="comments-${uid}">
-                        ${commentsHtml}
-                        <div class="comment-input-box"><input type="text" class="comment-input" id="comment-input-${uid}" placeholder="Write..."><button class="comment-send" onclick="window.addComment('${post.id}', '${target}')"><i class="fas fa-paper-plane"></i></button></div>
-                    </div>
-                </div>`;
-            } 
-            // Layout B: Standard (News/Events)
-            else {
-                let meta = post.category === 'events' ? `${post.village} • ${post.date}` : post.category === 'news' ? post.date : `${post.village} • ${post.time}`;
-                cardContent = `
-                <div class="card">
-                    <div class="card-header"><div class="avatar ${avatarClass}">${avatarText}</div><div class="user-info"><h4>${post.title}</h4><span>${meta}</span></div></div>
-                    <div class="card-content">${mediaHtml}${descHtml}</div>
-                    <div class="card-social">
-                        <button class="${btnClass}" onclick="window.toggleLike('${post.id}')"><i class="${heartIcon}"></i> ${likeCount}</button>
-                        <button class="social-btn" onclick="window.toggleComments('${post.id}', '${target}')"><i class="far fa-comment"></i> ${post.comments?post.comments.length:0}</button>
-                        <button class="social-btn" onclick="window.sharePost('${post.id}')"><i class="fas fa-share"></i> Share</button>
-                    </div>
-                    <div class="comments-section" id="comments-${uid}">
-                        ${commentsHtml}
-                        <div class="comment-input-box"><input type="text" class="comment-input" id="comment-input-${uid}" placeholder="Write a comment..."><button class="comment-send" onclick="window.addComment('${post.id}', '${target}')"><i class="fas fa-paper-plane"></i></button></div>
-                    </div>
-                </div>`;
-            }
-            container.insertAdjacentHTML('beforeend', cardContent);
-        }
             
             // --- LIVE STATUS CARD ---
             if (isLiveStatus) {
@@ -960,7 +892,7 @@ function applyLanguage() {
                 </div>`;
             }
             container.insertAdjacentHTML('beforeend', cardContent);
-        
+        }
 
         function renderProfilePosts() {
             const list = document.getElementById('profile-posts-list'); list.innerHTML = '';
